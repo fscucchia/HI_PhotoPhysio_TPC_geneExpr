@@ -950,66 +950,84 @@ datExpr_control_blue <- datExpr[control_samples, blue_genes ]
 datExpr_treat30_blue<- datExpr[treat30_samples, blue_genes ]
 datExpr_treat35_blue<- datExpr[treat35_samples, blue_genes]
 
-# Calculate intramodular connectivity for for all genes in a cluster/module using only the genes in that module and only the samples for each condition
-# kWithin: sum of connection strengths with other module genes
-#add genes names to connectivity vectors
-kWithin_control <- softConnectivity(datExpr_control_blue)
-names(kWithin_control) <- colnames(datExpr_control_blue)
-
-kWithin_treat30 <- softConnectivity(datExpr_treat30_blue)
-names(kWithin_treat30) <- colnames(datExpr_treat30_blue)
-
-kWithin_treat35 <- softConnectivity(datExpr_treat35_blue)
-names(kWithin_treat35) <- colnames(datExpr_treat35_blue)
+# # Calculate intramodular connectivity for for all genes in a cluster/module using only the genes in that module and only the samples for each condition
+# # kWithin: sum of connection strengths with other module genes
+# #add genes names to connectivity vectors
+# kWithin_control <- softConnectivity(datExpr_control_blue)
+# names(kWithin_control) <- colnames(datExpr_control_blue)
+# kWithin_treat30 <- softConnectivity(datExpr_treat30_blue)
+# names(kWithin_treat30) <- colnames(datExpr_treat30_blue)
+# kWithin_treat35 <- softConnectivity(datExpr_treat35_blue)
+# names(kWithin_treat35) <- colnames(datExpr_treat35_blue)
 
 # Number of top 10% hub genes for each group
 #select the top 10% hub genes in each module based on intramodular connectivity (common threshold)
 #Top 10% connectivity → ~100 hubs per 1000-gene module
-n_hubs_control <- ceiling(0.10 * length(kWithin_control))
-n_hubs_treat30 <- ceiling(0.10 * length(kWithin_control))
-n_hubs_treat35 <- ceiling(0.10 * length(kWithin_control))
+# Use sum of absolute correlations as a proxy for connectivity (ranks genes by their overall co-expression with all other genes in the module)
 
-# Get top 10% hub genes for each group
-top10pct_hubs_control <- names(sort(kWithin_control, decreasing = TRUE))[1:n_hubs_control]
-top10pct_hubs_treat30 <- names(sort(kWithin_treat30, decreasing = TRUE))[1:n_hubs_treat30]
-top10pct_hubs_treat35 <- names(sort(kWithin_treat35, decreasing = TRUE))[1:n_hubs_treat35]
+# For control group
+# Remove genes with zero variance
+var_genes <- apply(datExpr_control_blue, 2, function(x) var(x, na.rm = TRUE) > 0)
+datExpr_control_blue_filt <- datExpr_control_blue[, var_genes]
 
-cat("Top 10% hub genes (control):\n")
-print(top10pct_hubs_control)
-cat("Top 10% hub genes (treat30):\n")
-print(top10pct_hubs_treat30)
-cat("Top 10% hub genes (treat35):\n")
-print(top10pct_hubs_treat35)
+cor_mat_control <- cor(datExpr_control_blue_filt, method = "pearson", use = "pairwise.complete.obs")
+diag(cor_mat_control) <- 0
+hub_score_control <- rowSums(abs(cor_mat_control), na.rm = TRUE)
+names(hub_score_control) <- colnames(datExpr_control_blue_filt)
+top10pct_hubs_control <- names(sort(hub_score_control, decreasing = TRUE))[1:ceiling(0.10 * length(hub_score_control))]
+top10pct_hubs_control_blue <- names(sort(hub_score_control, decreasing = TRUE))[1:ceiling(0.10 * length(hub_score_control))]
+
+# For treat30 group
+# Remove genes with zero variance
+var_genes <- apply(datExpr_treat30_blue, 2, function(x) var(x, na.rm = TRUE) > 0)
+datExpr_treat30_blue_filt <- datExpr_treat30_blue[, var_genes]
+
+cor_mat_treat30 <- cor(datExpr_treat30_blue, method = "pearson", use = "pairwise.complete.obs")
+diag(cor_mat_treat30) <- 0
+hub_score_treat30 <- rowSums(abs(cor_mat_treat30), na.rm = TRUE)
+names(hub_score_treat30) <- colnames(datExpr_treat30_blue)
+top10pct_hubs_treat30 <- names(sort(hub_score_treat30, decreasing = TRUE))[1:ceiling(0.10 * length(hub_score_treat30))]
+top10pct_hubs_treat30_blue <- names(sort(hub_score_treat30, decreasing = TRUE))[1:ceiling(0.10 * length(hub_score_treat30))]
+
+# For treat35 group 
+# Remove genes with zero variance
+var_genes <- apply(datExpr_treat35_blue, 2, function(x) var(x, na.rm = TRUE) > 0)
+datExpr_treat35_blue_filt <- datExpr_treat35_blue[, var_genes]
+
+cor_mat_treat35 <- cor(datExpr_treat35_blue, method = "pearson", use = "pairwise.complete.obs")
+diag(cor_mat_treat35) <- 0
+hub_score_treat35 <- rowSums(abs(cor_mat_treat35), na.rm = TRUE)
+names(hub_score_treat35) <- colnames(datExpr_treat35_blue)
+top10pct_hubs_treat35 <- names(sort(hub_score_treat35, decreasing = TRUE))[1:ceiling(0.10 * length(hub_score_treat35))]
+top10pct_hubs_treat35_blue <- names(sort(hub_score_treat35, decreasing = TRUE))[1:ceiling(0.10 * length(hub_score_treat35))]
 
 # Save the top 10% hub genes as CSV files
 write.csv(data.frame(Gene = top10pct_hubs_control),
-          file = "top10pct_hub_genes_control_blue.csv", row.names = FALSE)
+          file = "top10pct_hub_genes_control_blue_2.csv", row.names = FALSE)
 write.csv(data.frame(Gene = top10pct_hubs_treat30),
-          file = "top10pct_hub_genes_treat30_blue.csv", row.names = FALSE)
+          file = "top10pct_hub_genes_treat30_blue_2.csv", row.names = FALSE)
 write.csv(data.frame(Gene = top10pct_hubs_treat35),
-          file = "top10pct_hub_genes_treat35_blue.csv", row.names = FALSE)
+          file = "top10pct_hub_genes_treat35_blue_2.csv", row.names = FALSE)
 
-#### Identify the top Hub Gene per module and temp
+# For control group
+top10pct_hubs_control <- names(sort(hub_score_control, decreasing = TRUE))[1:ceiling(0.10 * length(hub_score_control))]
+# Find the top hub gene among the top 10%
+top_hub_control <- top10pct_hubs_control[which.max(hub_score_control[top10pct_hubs_control])]
 
-# Number of top 10% hub genes for each group
-n_hubs <- ceiling(0.10 * length(blue_genes))
+# For treat30 group
+top10pct_hubs_treat30 <- names(sort(hub_score_treat30, decreasing = TRUE))[1:ceiling(0.10 * length(hub_score_treat30))]
+top_hub_treat30 <- top10pct_hubs_treat30[which.max(hub_score_treat30[top10pct_hubs_treat30])]
 
-# Get top 10% hub genes for each group
-top10pct_hubs_control <- names(sort(kWithin_control, decreasing = TRUE))[1:n_hubs]
-top10pct_hubs_treat30 <- names(sort(kWithin_treat30, decreasing = TRUE))[1:n_hubs]
-top10pct_hubs_treat35 <- names(sort(kWithin_treat35, decreasing = TRUE))[1:n_hubs]
-
-# Find the top hub gene (highest connectivity) within the top 10% for each group
-top_hub_control <- top10pct_hubs_control[1]
-top_hub_treat30 <- top10pct_hubs_treat30[1]
-top_hub_treat35 <- top10pct_hubs_treat35[1]
+# For treat35 group
+top10pct_hubs_treat35 <- names(sort(hub_score_treat35, decreasing = TRUE))[1:ceiling(0.10 * length(hub_score_treat35))]
+top_hub_treat35 <- top10pct_hubs_treat35[which.max(hub_score_treat35[top10pct_hubs_treat35])]
 
 cat("Top hub gene (control, top 10%):", top_hub_control, "\n")
-#Top hub gene (control, top 10%): Pocillopora_acuta_HIv2___TS.g18650.t1 
+#Top hub gene (control, top 10%): Pocillopora_acuta_HIv2___RNAseq.g1136.t1 
 cat("Top hub gene (treat30, top 10%):", top_hub_treat30, "\n")
-#Top hub gene (treat30, top 10%): Pocillopora_acuta_HIv2___RNAseq.g11463.t1 
+#Top hub gene (treat30, top 10%): Pocillopora_acuta_HIv2___RNAseq.g10011.t1
 cat("Top hub gene (treat35, top 10%):", top_hub_treat35, "\n")
-#Top hub gene (treat35, top 10%): Pocillopora_acuta_HIv2___RNAseq.g19582.t1 
+#Top hub gene (treat35, top 10%): Pocillopora_acuta_HIv2___TS.g6175.t1 
 
 
 ####### Compare module preservation across conditions 
@@ -1017,51 +1035,52 @@ cat("Top hub gene (treat35, top 10%):", top_hub_treat35, "\n")
 # Highlight Top 10% Hubs
 # Hub changing status between control and temps at break-points per (30 and 35) for all modules
 
-library(dplyr)
-library(tidyr)
-library(ggplot2)
-library(igraph)
+# library(dplyr)
+# library(tidyr)
+# library(ggplot2)
+# library(igraph)
 
-#select the top 10% hub genes in each module based on intramodular connectivity (common threshold)
-#Top 10% connectivity → ~100 hubs per 1000-gene module
+# #select the top 10% hub genes in each module based on intramodular connectivity (common threshold)
+# #Top 10% connectivity → ~100 hubs per 1000-gene module
 
-# Select only the top 10 hub genes for each condition (less computationally heavy for plotting)
-top10_genes_control <- top10pct_hubs_control[1:10]
-top10_genes_treat30 <- top10pct_hubs_treat30[1:10]
-top10_genes_treat35 <- top10pct_hubs_treat35[1:10]
+# # Select only the top 10 hub genes for each condition (less computationally heavy for plotting)
+# top10_genes_control <- top10pct_hubs_control[1:10]
+# top10_genes_treat30 <- top10pct_hubs_treat30[1:10]
+# top10_genes_treat35 <- top10pct_hubs_treat35[1:10]
 
-# Subset expression data to these genes
-datExpr_control_top10 <- datExpr_control_blue[, top10_genes_control, drop = FALSE]
-datExpr_treat30_top10 <- datExpr_treat30_blue[, top10_genes_treat30, drop = FALSE]
-datExpr_treat35_top10 <- datExpr_treat35_blue[, top10_genes_treat35, drop = FALSE]
+# # Subset expression data to these genes
+# datExpr_control_top10 <- datExpr_control_blue[, top10_genes_control, drop = FALSE]
+# datExpr_treat30_top10 <- datExpr_treat30_blue[, top10_genes_treat30, drop = FALSE]
+# datExpr_treat35_top10 <- datExpr_treat35_blue[, top10_genes_treat35, drop = FALSE]
 
-# Build adjacency/correlation matrices
-adj_control_top10 <- abs(cor(datExpr_control_top10, method = "pearson"))
-adj_treat30_top10 <- abs(cor(datExpr_treat30_top10, method = "pearson"))
-adj_treat35_top10 <- abs(cor(datExpr_treat35_top10, method = "pearson"))
+# # Build adjacency/correlation matrices
+# adj_control_top10 <- abs(cor(datExpr_control_top10, method = "pearson"))
+# adj_treat30_top10 <- abs(cor(datExpr_treat30_top10, method = "pearson"))
+# adj_treat35_top10 <- abs(cor(datExpr_treat35_top10, method = "pearson"))
 
-# Create igraph objects
-g_control_top10 <- graph_from_adjacency_matrix(adj_control_top10, mode = "undirected", weighted = TRUE, diag = FALSE)
-g_treat30_top10 <- graph_from_adjacency_matrix(adj_treat30_top10, mode = "undirected", weighted = TRUE, diag = FALSE)
-g_treat35_top10 <- graph_from_adjacency_matrix(adj_treat35_top10, mode = "undirected", weighted = TRUE, diag = FALSE)
+# # Create igraph objects
+# g_control_top10 <- graph_from_adjacency_matrix(adj_control_top10, mode = "undirected", weighted = TRUE, diag = FALSE)
+# g_treat30_top10 <- graph_from_adjacency_matrix(adj_treat30_top10, mode = "undirected", weighted = TRUE, diag = FALSE)
+# g_treat35_top10 <- graph_from_adjacency_matrix(adj_treat35_top10, mode = "undirected", weighted = TRUE, diag = FALSE)
 
-# Highlight the top hub gene (by kWithin) in red, others in gray
-V(g_control_top10)$color <- ifelse(names(V(g_control_top10)) == top_hub_control, "red", "gray")
-V(g_treat30_top10)$color <- ifelse(names(V(g_treat30_top10)) == top_hub_treat30, "red", "gray")
-V(g_treat35_top10)$color <- ifelse(names(V(g_treat35_top10)) == top_hub_treat35, "red", "gray")
+# # Highlight the top hub gene (by kWithin) in red, others in gray
+# V(g_control_top10)$color <- ifelse(names(V(g_control_top10)) == top_hub_control, "red", "gray")
+# V(g_treat30_top10)$color <- ifelse(names(V(g_treat30_top10)) == top_hub_treat30, "red", "gray")
+# V(g_treat35_top10)$color <- ifelse(names(V(g_treat35_top10)) == top_hub_treat35, "red", "gray")
 
-V(g_control_top10)$label <- ifelse(names(V(g_control_top10)) == top_hub_control, top_hub_control, "")
-V(g_treat30_top10)$label <- ifelse(names(V(g_treat30_top10)) == top_hub_treat30, top_hub_treat30, "")
-V(g_treat35_top10)$label <- ifelse(names(V(g_treat35_top10)) == top_hub_treat35, top_hub_treat35, "")
+# V(g_control_top10)$label <- ifelse(names(V(g_control_top10)) == top_hub_control, top_hub_control, "")
+# V(g_treat30_top10)$label <- ifelse(names(V(g_treat30_top10)) == top_hub_treat30, top_hub_treat30, "")
+# V(g_treat35_top10)$label <- ifelse(names(V(g_treat35_top10)) == top_hub_treat35, top_hub_treat35, "")
 
-# Plot networks
-pdf("network_top10genes_blue.pdf", width = 12, height = 8)
-par(mfrow = c(1, 3))
-plot(g_control_top10, main = "Control: Top 10 Hubs", vertex.label = V(g_control_top10)$label, vertex.size = 8)
-plot(g_treat30_top10, main = "Treat30: Top 10 Hubs", vertex.label = V(g_treat30_top10)$label, vertex.size = 8)
-plot(g_treat35_top10, main = "Treat35: Top 10 Hubs", vertex.label = V(g_treat35_top10)$label, vertex.size = 8)
-par(mfrow = c(1, 1))
-dev.off()
+# # Plot networks
+# pdf("network_top10genes_blue.pdf", width = 12, height = 8)
+# par(mfrow = c(1, 3))
+# plot(g_control_top10, main = "Control: Top 10 Hubs", vertex.label = V(g_control_top10)$label, vertex.size = 8)
+# plot(g_treat30_top10, main = "Treat30: Top 10 Hubs", vertex.label = V(g_treat30_top10)$label, vertex.size = 8)
+# plot(g_treat35_top10, main = "Treat35: Top 10 Hubs", vertex.label = V(g_treat35_top10)$label, vertex.size = 8)
+# par(mfrow = c(1, 1))
+# dev.off()
+
 
 #### Using the ggalluvial package to visualize the overlap of the top 10% hub genes in selected clusters for control, treat30, and 
 #### treat35.
@@ -1178,66 +1197,84 @@ datExpr_control_turquoise <- datExpr[control_samples, turquoise_genes ]
 datExpr_treat30_turquoise<- datExpr[treat30_samples, turquoise_genes ]
 datExpr_treat35_turquoise<- datExpr[treat35_samples, turquoise_genes]
 
-# Calculate intramodular connectivity for for all genes in a cluster/module using only the genes in that module and only the samples for each condition
-# kWithin: sum of connection strengths with other module genes
-#add genes names to connectivity vectors
-kWithin_control <- softConnectivity(datExpr_control_turquoise)
-names(kWithin_control) <- colnames(datExpr_control_turquoise)
-
-kWithin_treat30 <- softConnectivity(datExpr_treat30_turquoise)
-names(kWithin_treat30) <- colnames(datExpr_treat30_turquoise)
-
-kWithin_treat35 <- softConnectivity(datExpr_treat35_turquoise)
-names(kWithin_treat35) <- colnames(datExpr_treat35_turquoise)
+# # Calculate intramodular connectivity for for all genes in a cluster/module using only the genes in that module and only the samples for each condition
+# # kWithin: sum of connection strengths with other module genes
+# #add genes names to connectivity vectors
+# kWithin_control <- softConnectivity(datExpr_control_turquoise)
+# names(kWithin_control) <- colnames(datExpr_control_turquoise)
+# kWithin_treat30 <- softConnectivity(datExpr_treat30_turquoise)
+# names(kWithin_treat30) <- colnames(datExpr_treat30_turquoise)
+# kWithin_treat35 <- softConnectivity(datExpr_treat35_turquoise)
+# names(kWithin_treat35) <- colnames(datExpr_treat35_turquoise)
 
 # Number of top 10% hub genes for each group
 #select the top 10% hub genes in each module based on intramodular connectivity (common threshold)
 #Top 10% connectivity → ~100 hubs per 1000-gene module
-n_hubs_control <- ceiling(0.10 * length(kWithin_control))
-n_hubs_treat30 <- ceiling(0.10 * length(kWithin_control))
-n_hubs_treat35 <- ceiling(0.10 * length(kWithin_control))
+# Use sum of absolute correlations as a proxy for connectivity (ranks genes by their overall co-expression with all other genes in the module)
 
-# Get top 10% hub genes for each group
-top10pct_hubs_control <- names(sort(kWithin_control, decreasing = TRUE))[1:n_hubs_control]
-top10pct_hubs_treat30 <- names(sort(kWithin_treat30, decreasing = TRUE))[1:n_hubs_treat30]
-top10pct_hubs_treat35 <- names(sort(kWithin_treat35, decreasing = TRUE))[1:n_hubs_treat35]
+# For control group
+# Remove genes with zero variance
+var_genes <- apply(datExpr_control_turquoise, 2, function(x) var(x, na.rm = TRUE) > 0)
+datExpr_control_turquoise_filt <- datExpr_control_turquoise[, var_genes]
 
-cat("Top 10% hub genes (control):\n")
-print(top10pct_hubs_control)
-cat("Top 10% hub genes (treat30):\n")
-print(top10pct_hubs_treat30)
-cat("Top 10% hub genes (treat35):\n")
-print(top10pct_hubs_treat35)
+cor_mat_control <- cor(datExpr_control_turquoise_filt, method = "pearson", use = "pairwise.complete.obs")
+diag(cor_mat_control) <- 0
+hub_score_control <- rowSums(abs(cor_mat_control), na.rm = TRUE)
+names(hub_score_control) <- colnames(datExpr_control_turquoise_filt)
+top10pct_hubs_control <- names(sort(hub_score_control, decreasing = TRUE))[1:ceiling(0.10 * length(hub_score_control))]
+top10pct_hubs_control_turquoise <- names(sort(hub_score_control, decreasing = TRUE))[1:ceiling(0.10 * length(hub_score_control))]
+
+# For treat30 group
+# Remove genes with zero variance
+var_genes <- apply(datExpr_treat30_turquoise, 2, function(x) var(x, na.rm = TRUE) > 0)
+datExpr_treat30_turquoise_filt <- datExpr_treat30_turquoise[, var_genes]
+
+cor_mat_treat30 <- cor(datExpr_treat30_turquoise, method = "pearson", use = "pairwise.complete.obs")
+diag(cor_mat_treat30) <- 0
+hub_score_treat30 <- rowSums(abs(cor_mat_treat30), na.rm = TRUE)
+names(hub_score_treat30) <- colnames(datExpr_treat30_turquoise)
+top10pct_hubs_treat30 <- names(sort(hub_score_treat30, decreasing = TRUE))[1:ceiling(0.10 * length(hub_score_treat30))]
+top10pct_hubs_treat30_turquoise <- names(sort(hub_score_treat30, decreasing = TRUE))[1:ceiling(0.10 * length(hub_score_treat30))]
+
+# For treat35 group 
+# Remove genes with zero variance
+var_genes <- apply(datExpr_treat35_turquoise, 2, function(x) var(x, na.rm = TRUE) > 0)
+datExpr_treat35_turquoise_filt <- datExpr_treat35_turquoise[, var_genes]
+
+cor_mat_treat35 <- cor(datExpr_treat35_turquoise, method = "pearson", use = "pairwise.complete.obs")
+diag(cor_mat_treat35) <- 0
+hub_score_treat35 <- rowSums(abs(cor_mat_treat35), na.rm = TRUE)
+names(hub_score_treat35) <- colnames(datExpr_treat35_turquoise)
+top10pct_hubs_treat35 <- names(sort(hub_score_treat35, decreasing = TRUE))[1:ceiling(0.10 * length(hub_score_treat35))]
+top10pct_hubs_treat35_turquoise <- names(sort(hub_score_treat35, decreasing = TRUE))[1:ceiling(0.10 * length(hub_score_treat35))]
 
 # Save the top 10% hub genes as CSV files
 write.csv(data.frame(Gene = top10pct_hubs_control),
-          file = "top10pct_hub_genes_control_turquoise.csv", row.names = FALSE)
+          file = "top10pct_hub_genes_control_turquoise_2.csv", row.names = FALSE)
 write.csv(data.frame(Gene = top10pct_hubs_treat30),
-          file = "top10pct_hub_genes_treat30_turquoise.csv", row.names = FALSE)
+          file = "top10pct_hub_genes_treat30_turquoise_2.csv", row.names = FALSE)
 write.csv(data.frame(Gene = top10pct_hubs_treat35),
-          file = "top10pct_hub_genes_treat35_turquoise.csv", row.names = FALSE)
+          file = "top10pct_hub_genes_treat35_turquoise_2.csv", row.names = FALSE)
 
-#### Identify the top Hub Gene per module and temp
+# For control group
+top10pct_hubs_control <- names(sort(hub_score_control, decreasing = TRUE))[1:ceiling(0.10 * length(hub_score_control))]
+# Find the top hub gene among the top 10%
+top_hub_control <- top10pct_hubs_control[which.max(hub_score_control[top10pct_hubs_control])]
 
-# Number of top 10% hub genes for each group
-n_hubs <- ceiling(0.10 * length(turquoise_genes))
+# For treat30 group
+top10pct_hubs_treat30 <- names(sort(hub_score_treat30, decreasing = TRUE))[1:ceiling(0.10 * length(hub_score_treat30))]
+top_hub_treat30 <- top10pct_hubs_treat30[which.max(hub_score_treat30[top10pct_hubs_treat30])]
 
-# Get top 10% hub genes for each group
-top10pct_hubs_control <- names(sort(kWithin_control, decreasing = TRUE))[1:n_hubs]
-top10pct_hubs_treat30 <- names(sort(kWithin_treat30, decreasing = TRUE))[1:n_hubs]
-top10pct_hubs_treat35 <- names(sort(kWithin_treat35, decreasing = TRUE))[1:n_hubs]
-
-# Find the top hub gene (highest connectivity) within the top 10% for each group
-top_hub_control <- top10pct_hubs_control[1]
-top_hub_treat30 <- top10pct_hubs_treat30[1]
-top_hub_treat35 <- top10pct_hubs_treat35[1]
+# For treat35 group
+top10pct_hubs_treat35 <- names(sort(hub_score_treat35, decreasing = TRUE))[1:ceiling(0.10 * length(hub_score_treat35))]
+top_hub_treat35 <- top10pct_hubs_treat35[which.max(hub_score_treat35[top10pct_hubs_treat35])]
 
 cat("Top hub gene (control, top 10%):", top_hub_control, "\n")
-#Top hub gene (control, top 10%): Pocillopora_acuta_HIv2___RNAseq.g12020.t1
+#Top hub gene (control, top 10%): Pocillopora_acuta_HIv2___RNAseq.g9672.t1
 cat("Top hub gene (treat30, top 10%):", top_hub_treat30, "\n")
-#Top hub gene (treat30, top 10%): Pocillopora_acuta_HIv2___RNAseq.g8212.t1 
+#Top hub gene (treat30, top 10%): Pocillopora_acuta_HIv2___RNAseq.g3341.t1
 cat("Top hub gene (treat35, top 10%):", top_hub_treat35, "\n")
-#Top hub gene (treat35, top 10%): Pocillopora_acuta_HIv2___RNAseq.g19245.t1 
+#Top hub gene (treat35, top 10%): Pocillopora_acuta_HIv2___RNAseq.g7235.t1
 
 
 ####### Compare module preservation across conditions 
@@ -1245,51 +1282,51 @@ cat("Top hub gene (treat35, top 10%):", top_hub_treat35, "\n")
 # Highlight Top 10% Hubs
 # Hub changing status between control and temps at break-points per (30 and 35) for all modules
 
-library(dplyr)
-library(tidyr)
-library(ggplot2)
-library(igraph)
+# library(dplyr)
+# library(tidyr)
+# library(ggplot2)
+# library(igraph)
 
-#select the top 10% hub genes in each module based on intramodular connectivity (common threshold)
-#Top 10% connectivity → ~100 hubs per 1000-gene module
+# #select the top 10% hub genes in each module based on intramodular connectivity (common threshold)
+# #Top 10% connectivity → ~100 hubs per 1000-gene module
 
-# Select only the top 10 hub genes for each condition (less computationally heavy for plotting)
-top10_genes_control <- top10pct_hubs_control[1:10]
-top10_genes_treat30 <- top10pct_hubs_treat30[1:10]
-top10_genes_treat35 <- top10pct_hubs_treat35[1:10]
+# # Select only the top 10 hub genes for each condition (less computationally heavy for plotting)
+# top10_genes_control <- top10pct_hubs_control[1:10]
+# top10_genes_treat30 <- top10pct_hubs_treat30[1:10]
+# top10_genes_treat35 <- top10pct_hubs_treat35[1:10]
 
-# Subset expression data to these genes
-datExpr_control_top10 <- datExpr_control_turquoise[, top10_genes_control, drop = FALSE]
-datExpr_treat30_top10 <- datExpr_treat30_turquoise[, top10_genes_treat30, drop = FALSE]
-datExpr_treat35_top10 <- datExpr_treat35_turquoise[, top10_genes_treat35, drop = FALSE]
+# # Subset expression data to these genes
+# datExpr_control_top10 <- datExpr_control_turquoise[, top10_genes_control, drop = FALSE]
+# datExpr_treat30_top10 <- datExpr_treat30_turquoise[, top10_genes_treat30, drop = FALSE]
+# datExpr_treat35_top10 <- datExpr_treat35_turquoise[, top10_genes_treat35, drop = FALSE]
 
-# Build adjacency/correlation matrices
-adj_control_top10 <- abs(cor(datExpr_control_top10, method = "pearson"))
-adj_treat30_top10 <- abs(cor(datExpr_treat30_top10, method = "pearson"))
-adj_treat35_top10 <- abs(cor(datExpr_treat35_top10, method = "pearson"))
+# # Build adjacency/correlation matrices
+# adj_control_top10 <- abs(cor(datExpr_control_top10, method = "pearson"))
+# adj_treat30_top10 <- abs(cor(datExpr_treat30_top10, method = "pearson"))
+# adj_treat35_top10 <- abs(cor(datExpr_treat35_top10, method = "pearson"))
 
-# Create igraph objects
-g_control_top10 <- graph_from_adjacency_matrix(adj_control_top10, mode = "undirected", weighted = TRUE, diag = FALSE)
-g_treat30_top10 <- graph_from_adjacency_matrix(adj_treat30_top10, mode = "undirected", weighted = TRUE, diag = FALSE)
-g_treat35_top10 <- graph_from_adjacency_matrix(adj_treat35_top10, mode = "undirected", weighted = TRUE, diag = FALSE)
+# # Create igraph objects
+# g_control_top10 <- graph_from_adjacency_matrix(adj_control_top10, mode = "undirected", weighted = TRUE, diag = FALSE)
+# g_treat30_top10 <- graph_from_adjacency_matrix(adj_treat30_top10, mode = "undirected", weighted = TRUE, diag = FALSE)
+# g_treat35_top10 <- graph_from_adjacency_matrix(adj_treat35_top10, mode = "undirected", weighted = TRUE, diag = FALSE)
 
-# Highlight the top hub gene (by kWithin) in red, others in gray
-V(g_control_top10)$color <- ifelse(names(V(g_control_top10)) == top_hub_control, "red", "gray")
-V(g_treat30_top10)$color <- ifelse(names(V(g_treat30_top10)) == top_hub_treat30, "red", "gray")
-V(g_treat35_top10)$color <- ifelse(names(V(g_treat35_top10)) == top_hub_treat35, "red", "gray")
+# # Highlight the top hub gene (by kWithin) in red, others in gray
+# V(g_control_top10)$color <- ifelse(names(V(g_control_top10)) == top_hub_control, "red", "gray")
+# V(g_treat30_top10)$color <- ifelse(names(V(g_treat30_top10)) == top_hub_treat30, "red", "gray")
+# V(g_treat35_top10)$color <- ifelse(names(V(g_treat35_top10)) == top_hub_treat35, "red", "gray")
 
-V(g_control_top10)$label <- ifelse(names(V(g_control_top10)) == top_hub_control, top_hub_control, "")
-V(g_treat30_top10)$label <- ifelse(names(V(g_treat30_top10)) == top_hub_treat30, top_hub_treat30, "")
-V(g_treat35_top10)$label <- ifelse(names(V(g_treat35_top10)) == top_hub_treat35, top_hub_treat35, "")
+# V(g_control_top10)$label <- ifelse(names(V(g_control_top10)) == top_hub_control, top_hub_control, "")
+# V(g_treat30_top10)$label <- ifelse(names(V(g_treat30_top10)) == top_hub_treat30, top_hub_treat30, "")
+# V(g_treat35_top10)$label <- ifelse(names(V(g_treat35_top10)) == top_hub_treat35, top_hub_treat35, "")
 
-# Plot networks
-pdf("network_top10genes_turquoise.pdf", width = 12, height = 8)
-par(mfrow = c(1, 3))
-plot(g_control_top10, main = "Control: Top 10 Hubs", vertex.label = V(g_control_top10)$label, vertex.size = 8)
-plot(g_treat30_top10, main = "Treat30: Top 10 Hubs", vertex.label = V(g_treat30_top10)$label, vertex.size = 8)
-plot(g_treat35_top10, main = "Treat35: Top 10 Hubs", vertex.label = V(g_treat35_top10)$label, vertex.size = 8)
-par(mfrow = c(1, 1))
-dev.off()
+# # Plot networks
+# pdf("network_top10genes_turquoise.pdf", width = 12, height = 8)
+# par(mfrow = c(1, 3))
+# plot(g_control_top10, main = "Control: Top 10 Hubs", vertex.label = V(g_control_top10)$label, vertex.size = 8)
+# plot(g_treat30_top10, main = "Treat30: Top 10 Hubs", vertex.label = V(g_treat30_top10)$label, vertex.size = 8)
+# plot(g_treat35_top10, main = "Treat35: Top 10 Hubs", vertex.label = V(g_treat35_top10)$label, vertex.size = 8)
+# par(mfrow = c(1, 1))
+# dev.off()
 
 #### Using the ggalluvial package to visualize the overlap of the top 10% hub genes in selected clusters for control, treat30, and 
 #### treat35.
@@ -1316,7 +1353,7 @@ membership <- membership %>%
 membership_summary <- membership %>%
   group_by(Control, Treat30, Treat35) %>%
   summarise(Freq = n(), .groups = "drop") %>%
-  mutate(Cluster = "Cluster 5 Genes")
+  mutate(Cluster = "Turquoise Genes")
 
 # Create a label for each interaction pattern
 membership_summary$pattern <- interaction(membership_summary$Control, membership_summary$Treat30, membership_summary$Treat35)
@@ -1397,6 +1434,60 @@ barTurquoise <- ggplot(membership_summary, aes(x = "Turquoise", y = Percent, fil
 library(patchwork)
 barBlue + barTurquoise 
 
+
+######## Make a global alluvial plot showing the overlap of all top 10% hub genes from the blue and turquoise modules across the three temperature groups
+
+# Combine all top 10% hub genes from all clusters and all conditions
+all_top_hubs <- unique(c(
+  top10pct_hubs_control_blue, top10pct_hubs_treat30_blue, top10pct_hubs_treat35_blue,
+  top10pct_hubs_control_turquoise, top10pct_hubs_treat30_turquoise, top10pct_hubs_treat35_turquoise
+))
+
+# For each gene, check if it is a top hub in each group (any cluster)
+membership_global <- data.frame(
+  Gene = all_top_hubs,
+  Control = as.integer(all_top_hubs %in% c(top10pct_hubs_control_blue, top10pct_hubs_control_turquoise)),
+  Treat30 = as.integer(all_top_hubs %in% c(top10pct_hubs_treat30_blue, top10pct_hubs_treat30_turquoise)),
+  Treat35 = as.integer(all_top_hubs %in% c(top10pct_hubs_treat35_blue, top10pct_hubs_treat35_turquoise))
+)
+
+# Filter to keep only genes that are a hub in at least one condition
+membership_global <- membership_global %>%
+  filter(Control == 1 | Treat30 == 1 | Treat35 == 1)
+
+library(dplyr)
+library(ggalluvial)
+
+membership_summary_global <- membership_global %>%
+  group_by(Control, Treat30, Treat35) %>%
+  summarise(Freq = n(), .groups = "drop") %>%
+  mutate(Global = "All Top 10% Hubs")
+
+membership_summary_global$pattern <- interaction(membership_summary_global$Control, membership_summary_global$Treat30, membership_summary_global$Treat35)
+pattern_counts <- setNames(membership_summary_global$Freq, membership_summary_global$pattern)
+pattern_labels <- paste0(names(pattern_counts), " (n=", pattern_counts, ")")
+names(pattern_labels) <- names(pattern_counts)
+
+ggplot(membership_summary_global,
+       aes(axis1 = Global,
+           axis2 = factor(Control, levels = c(0, 1), labels = c("Not Hub", "Hub")),
+           axis3 = factor(Treat30, levels = c(0, 1), labels = c("Not Hub", "Hub")),
+           axis4 = factor(Treat35, levels = c(0, 1), labels = c("Not Hub", "Hub")),
+           y = Freq)) +
+  geom_alluvium(aes(fill = pattern), width = 1/8, alpha = 0.8) +
+  geom_stratum(width = 1/6, fill = "grey80", color = "black") +
+  geom_text(stat = "stratum", aes(label = after_stat(stratum)), size = 4) +
+  scale_x_discrete(limits = c("Global", "Control", "Treat30", "Treat35"),
+                   labels = c("Global" = "All Top 10% Hubs",
+                              "Control" = "Control",
+                              "Treat30" = "Treat30",
+                              "Treat35" = "Treat35")) +
+  scale_fill_brewer(type = "qual", palette = "Set2", name = "Pattern", labels = pattern_labels) +
+  theme_minimal() +
+  labs(title = "Global Overlap of Top 10% Hub Genes Across Modules and Conditions",
+       y = "Number of Genes", x = "") +
+  theme(axis.text.y = element_blank(),
+        axis.ticks.y = element_blank())
 
 
 
@@ -1687,3 +1778,38 @@ cat("Permutation p-value_turquoise35:", p_value, "\n")   ###35
 # 3. Interpretation
 # If p < 0.05: The difference in network density between conditions is statistically significant.
 # If p ≥ 0.05: The observed difference could be due to chance.
+
+
+
+
+
+######## Extract the genes from modules for GO enrichment analysis with ViSEAGO
+
+# For blue module
+# blue_genes: vector of gene names in blue module
+# datExpr: samples x all genes (genes as columns)
+
+# Subset datExpr to blue module
+blue_counts <- datExpr[, blue_genes, drop = FALSE]
+
+# Transpose so genes are rows, samples are columns (ViSEAGO expects this format)
+blue_counts_t <- as.data.frame(t(blue_counts))
+blue_counts_t$gene_id <- rownames(blue_counts_t)
+
+# Move gene_id to first column
+blue_counts_t <- blue_counts_t[, c(ncol(blue_counts_t), 1:(ncol(blue_counts_t)-1))]
+
+# Save as CSV
+write.csv(blue_counts_t, file = "blue_gene_counts.csv", row.names = FALSE)
+
+# For turquoise module
+# turquoise_genes: vector of gene names in turquoise module
+# Subset datExpr to turquoise module
+turquoise_counts <- datExpr[, turquoise_genes, drop = FALSE]
+# Transpose so genes are rows, samples are columns (ViSEAGO expects this format)
+turquoise_counts_t <- as.data.frame(t(turquoise_counts))
+turquoise_counts_t$gene_id <- rownames(turquoise_counts_t)
+# Move gene_id to first column
+turquoise_counts_t <- turquoise_counts_t[, c(ncol(turquoise_counts_t), 1:(ncol(turquoise_counts_t)-1))]
+# Save as CSV
+write.csv(turquoise_counts_t, file = "turquoise_gene_counts.csv", row.names = FALSE)

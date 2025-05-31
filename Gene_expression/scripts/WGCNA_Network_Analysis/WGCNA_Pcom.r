@@ -27,19 +27,23 @@ library("dplyr")
 # library(magrittr) # Not mandatory, we use the pipe `%>%` to ease readability.
 
 #treatment information
-treatmentinfo <- read.csv("RNAseq_Mcap_data.csv", header = TRUE, sep = ";")
+treatmentinfo <- read.csv("RNAseq_Pcom_data.csv", header = TRUE, sep = ";")
 
 #gene count matrix
-gcount <- as.data.frame(read.csv("gene_count_matrix_noIso_Mcap2.csv", row.names="gene_id"), colClasses = double)
+gcount <- as.data.frame(read.csv("gene_count_matrix_noIso_Pcom2.csv", row.names="gene_id"), colClasses = double)
+
+#remove samples below 5 million reads
+gcount <- gcount %>% dplyr::select(-B7)
+treatmentinfo <- treatmentinfo[!(treatmentinfo$sample_id %in% c("B7")), ]
 
 # Reorder treatmentinfo to match the columns of gcount_filt
 treatmentinfo <- treatmentinfo[match(colnames(gcount), treatmentinfo$sample_id), ]
 
 ## Quality-filter gene counts
-#Set filter values for PoverA: smallest sample size per treat is 4, so 4/24 (24 samples) is 0.17
-#This means that 4 out of 24 (0.17) samples need to have counts over 10.
-#So P=17 percent of the samples have counts over A=10. 
-filt <- filterfun(pOverA(0.17,10))
+#Set filter values for PoverA: smallest sample size per treat is 3, so 3/22 (22 samples) is 0.14
+#This means that 3 out of 22 (0.14) samples need to have counts over 10.
+#So P=14 percent of the samples have counts over A=10. 
+filt <- filterfun(pOverA(0.14,10))
 
 #create filter for the counts data
 gfilt <- genefilter(gcount, filt)
@@ -55,10 +59,10 @@ gcount_filt <- as.data.frame(gcount[which(rownames(gcount) %in% gn.keep),])
 
 #How many rows do we have before and after filtering?
 nrow(gcount) #Before                
-# [1] 54384
+# [1] 44130
 
 nrow(gcount_filt) #After
-# [1] 27540
+# [1] 28378
 
 
 ### Read normalization
@@ -100,7 +104,7 @@ PCA <- ggplot(gPCAdata, aes(PC1, PC2, color=temp)) +
         plot.background=element_blank()) + #Set the plot background
   theme(legend.position = ("top")); PCA #set title attributes`
 
-ggsave(file = "PCA_all_vst_Mcap.png", PCA)
+ggsave(file = "PCA_all_vst_Pcom.png", PCA)
 
 
 #### Compile GWENA/WGCNA Dataset
@@ -127,10 +131,10 @@ dev.off()
 
 # Number of genes
 ncol(datExpr)
-#> [1] 27540
+#> [1] 28378
 # Number of samples
 nrow(datExpr)
-#> [1] 24
+#> [1] 22
 
 # Checking expression data set is correctly defined
 is_data_expr(datExpr)
@@ -273,12 +277,12 @@ text(sft$fitIndices[,1], sft$fitIndices[,5], labels=powers, cex=cex1,col="red")
 dev.off()
 
 #The lowest scale-free topology fit index R^2 recommended by Langfelder and Horvath is 0.8. 
-#From the graph, it appears that our soft thresholding power is 5 because it is the lowest 
-#power before the R^2=0.8 threshold that maximizes with model fit (5 is the number right above the red line).
+#From the graph, it appears that our soft thresholding power is 7 because it is the lowest 
+#power before the R^2=0.8 threshold that maximizes with model fit (7 is the number right above the red line).
 
 ### Network construction and module detection:
 # Co-expression adjacency and topological overlap matrix similarity
-# Co-expression similarity and adjacency, using the soft thresholding power 5 and translate the adjacency into topological overlap matrix to calculate 
+# Co-expression similarity and adjacency, using the soft thresholding power 7and translate the adjacency into topological overlap matrix to calculate 
 # the corresponding dissimilarity. 
 #I will use a signed network because in expression data where you are interested in when expression on one gene increases or 
 #decreases with expression level of another you would use a signed network (when you are interested in the direction of change, correlation and anti-correlation, you use a signed network).
@@ -287,19 +291,19 @@ options(stringsAsFactors = FALSE)
 enableWGCNAThreads() #Allow multi-threading within WGCNA
 
 #Run analysis
-softPower=5 #Set softPower to 5
+softPower=7 #Set softPower to 7
 adjacency=adjacency(datExpr, power=softPower,type="signed") #Calculate adjacency
 TOM= TOMsimilarity(adjacency,TOMType = "signed") #Translate adjacency into topological overlap matrix
 dissTOM= 1-TOM #Calculate dissimilarity in TOM
-save(adjacency, TOM, dissTOM, file = "/work/pi_hputnam_uri_edu/fscucchia/20250424_ENCORE_HawaiiTPC_Federica/ENCORE_Hawaii_TPC_Rstudio/GWENA/Mcap/adjTOM.RData")
-save(dissTOM, file = "/work/pi_hputnam_uri_edu/fscucchia/20250424_ENCORE_HawaiiTPC_Federica/ENCORE_Hawaii_TPC_Rstudio/GWENA/Mcap/dissTOM.RData") 
+save(adjacency, TOM, dissTOM, file = "/work/pi_hputnam_uri_edu/fscucchia/20250424_ENCORE_HawaiiTPC_Federica/ENCORE_Hawaii_TPC_Rstudio/GWENA/Pcom/adjTOM.RData")
+save(dissTOM, file = "/work/pi_hputnam_uri_edu/fscucchia/20250424_ENCORE_HawaiiTPC_Federica/ENCORE_Hawaii_TPC_Rstudio/GWENA/Pcom/dissTOM.RData") 
 
 # Clustering using TOM
 #Form distance matrix
 geneTree= flashClust(as.dist(dissTOM), method="average")
 
 #We will now plot a dendrogram of genes. Each leaf corresponds to a gene, branches grouping together densely are interconnected, highly co-expressed genes
-pdf(file="/work/pi_hputnam_uri_edu/fscucchia/20250424_ENCORE_HawaiiTPC_Federica/ENCORE_Hawaii_TPC_Rstudio/GWENA/Mcap/dissTOMClustering.pdf", width=20, height=20)
+pdf(file="/work/pi_hputnam_uri_edu/fscucchia/20250424_ENCORE_HawaiiTPC_Federica/ENCORE_Hawaii_TPC_Rstudio/GWENA/Pcom/dissTOMClustering.pdf", width=20, height=20)
 plot(geneTree, xlab="", sub="", main= "Gene Clustering on TOM-based dissimilarity", labels= FALSE,hang=0.04)
 dev.off()
 
@@ -309,15 +313,13 @@ dev.off()
 # relatively high (minimum size = 30).
 
 minModuleSize = 30 #default value used most often
-
 dynamicMods = cutreeDynamic(dendro = geneTree, distM = dissTOM,
 deepSplit = 2, pamRespectsDendro = FALSE,
 minClusterSize = minModuleSize)
-
 table(dynamicMods) #list modules and respective sizes
-save(dynamicMods, geneTree, file = "/work/pi_hputnam_uri_edu/fscucchia/20250424_ENCORE_HawaiiTPC_Federica/ENCORE_Hawaii_TPC_Rstudio/GWENA/Mcap/dyMod_geneTree.RData")
+save(dynamicMods, geneTree, file = "/work/pi_hputnam_uri_edu/fscucchia/20250424_ENCORE_HawaiiTPC_Federica/ENCORE_Hawaii_TPC_Rstudio/GWENA/Pcom/dyMod_geneTree.RData")
 
-dyMod_geneTree <- load(file = "/work/pi_hputnam_uri_edu/fscucchia/20250424_ENCORE_HawaiiTPC_Federica/ENCORE_Hawaii_TPC_Rstudio/GWENA/Mcap/dyMod_geneTree.RData")
+dyMod_geneTree <- load(file = "/work/pi_hputnam_uri_edu/fscucchia/20250424_ENCORE_HawaiiTPC_Federica/ENCORE_Hawaii_TPC_Rstudio/GWENA/Pcom/dyMod_geneTree.RData")
 
 dyMod_geneTree
 ## [1] "dynamicMods" "geneTree"
@@ -326,12 +328,14 @@ dyMod_geneTree
 dynamicColors = labels2colors(dynamicMods) # Convert numeric labels into colors
 table(dynamicColors)
 # dynamicColors
-#         bisque4           black            blue           brown          brown4            cyan 
-#             122             615            5774            2404             122             364 
-#       darkgreen        darkgrey     darkmagenta  darkolivegreen      darkorange     darkorange2 
-#             223             216             177             180             201             131 
+# antiquewhite4         bisque4           black            blue           brown          brown4 
+#              75             127             780            4910            3114             129 
+#          coral1          coral2            cyan       darkgreen        darkgrey     darkmagenta 
+#              75              75             342             265             250             170 
+#  darkolivegreen      darkorange     darkorange2         darkred   darkseagreen4   darkslateblue 
+#             171             213             134             274              78             120 
 
-pdf(file="/work/pi_hputnam_uri_edu/fscucchia/20250424_ENCORE_HawaiiTPC_Federica/ENCORE_Hawaii_TPC_Rstudio/GWENA/Mcap/dissTOMColorClustering.pdf")
+pdf(file="/work/pi_hputnam_uri_edu/fscucchia/20250424_ENCORE_HawaiiTPC_Federica/ENCORE_Hawaii_TPC_Rstudio/GWENA/Pcom/dissTOMColorClustering.pdf")
 plotDendroAndColors(geneTree, dynamicColors, "Dynamic Tree Cut", dendroLabels = FALSE, hang = 0.03, addGuide = TRUE, guideHang = 0.05, main = "Gene dendrogram and module colors")
 dev.off()
 
@@ -339,7 +343,7 @@ dev.off()
 # Plot module similarity based on eigengene value
 
 #Calculate eigengenes
-MEList = moduleEigengenes(datExpr, colors = dynamicColors, softPower = 5)
+MEList = moduleEigengenes(datExpr, colors = dynamicColors, softPower = 7)
 MEs = MEList$eigengenes
 
 #Calculate dissimilarity of module eigengenes
@@ -348,7 +352,7 @@ MEDiss = 1-cor(MEs)
 #Cluster again and plot the results
 METree = flashClust(as.dist(MEDiss), method = "average")
 
-pdf(file="/work/pi_hputnam_uri_edu/fscucchia/20250424_ENCORE_HawaiiTPC_Federica/ENCORE_Hawaii_TPC_Rstudio/GWENA/Mcap/eigengeneClustering1.pdf", width = 20)
+pdf(file="/work/pi_hputnam_uri_edu/fscucchia/20250424_ENCORE_HawaiiTPC_Federica/ENCORE_Hawaii_TPC_Rstudio/GWENA/Pcom/eigengeneClustering1.pdf", width = 20)
 plot(METree, main = "Clustering of module eigengenes", xlab = "", sub = "")
 dev.off()
 
@@ -356,7 +360,7 @@ dev.off()
 
 MEDissThres= 0.20 #merge modules that are 80% similar
 
-pdf(file="/work/pi_hputnam_uri_edu/fscucchia/20250424_ENCORE_HawaiiTPC_Federica/ENCORE_Hawaii_TPC_Rstudio/GWENA/Mcap/eigengeneClustering2.pdf", width = 20)
+pdf(file="/work/pi_hputnam_uri_edu/fscucchia/20250424_ENCORE_HawaiiTPC_Federica/ENCORE_Hawaii_TPC_Rstudio/GWENA/Pcom/eigengeneClustering2.pdf", width = 20)
 plot(METree, main = "Clustering of module eigengenes", xlab = "", sub = "")
 abline(h=MEDissThres, col="red")
 dev.off()
@@ -366,7 +370,7 @@ merge= mergeCloseModules(datExpr, dynamicColors, cutHeight= MEDissThres, verbose
 mergedColors= merge$colors
 mergedMEs= merge$newMEs
 
-pdf(file="/work/pi_hputnam_uri_edu/fscucchia/20250424_ENCORE_HawaiiTPC_Federica/ENCORE_Hawaii_TPC_Rstudio/GWENA/Mcap/mergedClusters.pdf", width=20, height=20)
+pdf(file="/work/pi_hputnam_uri_edu/fscucchia/20250424_ENCORE_HawaiiTPC_Federica/ENCORE_Hawaii_TPC_Rstudio/GWENA/Pcom/mergedClusters.pdf", width=20, height=20)
 plotDendroAndColors(geneTree, cbind(dynamicColors, mergedColors), c("Dynamic Tree Cut", "Merged dynamic"), dendroLabels= FALSE, hang=0.03, addGuide= TRUE, guideHang=0.05)
 dev.off()
 
@@ -377,13 +381,14 @@ colorOrder = c("grey", standardColors(50)); # Construct numerical labels corresp
 moduleLabels = match(moduleColors, colorOrder)-1;
 MEs = mergedMEs;
 ncol(MEs) 
-# [1] 34
+# [1] 38
+
 
 # Plot new tree
 #Calculate dissimilarity of module eigengenes
 MEDiss = 1-cor(MEs)
 #Cluster again and plot the results
-pdf(file="/work/pi_hputnam_uri_edu/fscucchia/20250424_ENCORE_HawaiiTPC_Federica/ENCORE_Hawaii_TPC_Rstudio/GWENA/Mcap/eigengeneClustering3.pdf")
+pdf(file="/work/pi_hputnam_uri_edu/fscucchia/20250424_ENCORE_HawaiiTPC_Federica/ENCORE_Hawaii_TPC_Rstudio/GWENA/Pcom/eigengeneClustering3.pdf")
 METree = flashClust(as.dist(MEDiss), method = "average")
 MEtreePlot = plot(METree, main = "Clustering of module eigengenes", xlab = "", sub = "")
 dev.off()
@@ -394,17 +399,17 @@ dev.off()
 treatmentinfo$temp <- factor(paste0("t", as.character(treatmentinfo$temp)))
 #allTraits <- names(treatmentinfo$temp)
 allTraits <-levels(treatmentinfo$temp)
-allTraits$tt12 <- c(0,0,1,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0)
-allTraits$tt18 <- c(1,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0)
-allTraits$tt25 <- c(0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,1,0)
-allTraits$tt26.8<-c(0,1,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0)
-allTraits$tt30 <- c(0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,1)
-allTraits$tt35 <- c(0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,1,0,0)
+allTraits$tt12 <- c(0,0,1,0,0,0,0,0,0,1,0,0,0,0,1,0,0,0,1,0,0,0)
+allTraits$tt18 <- c(1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0)
+allTraits$tt25 <- c(0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,1,0,1)
+allTraits$tt26.8<-c(0,1,0,0,0,1,0,0,1,0,0,0,0,1,0,0,0,0,0,0,0,0)
+allTraits$tt30 <- c(0,0,0,0,1,0,0,1,0,0,0,1,0,0,0,0,0,1,0,0,0,0)
+allTraits$tt35 <- c(0,0,0,0,0,0,1,0,0,0,1,0,0,0,0,1,0,0,0,0,0,0)
 
 datTraits <- as.data.frame(allTraits)
 datTraits <- datTraits[ , -(1:6)]
 dim(datTraits)
-## [1] 24 6
+## [1] 22 6
 
 rownames(datTraits) <- treatmentinfo$sample_id
 print(datTraits)
@@ -412,20 +417,14 @@ print(datTraits)
 # B1     0    1    0      0    0    0
 # B10    0    0    0      1    0    0
 # B6     1    0    0      0    0    0
-# B7     0    0    0      0    0    1
 # B8     0    0    1      0    0    0
 # B9     0    0    0      0    1    0
-# F1     0    1    0      0    0    0
 # F10    0    0    0      1    0    0
-# F6     1    0    0      0    0    0
 # F7     0    0    0      0    0    1
-# F8     0    0    1      0    0    0
 # F9     0    0    0      0    1    0
-# G1     0    1    0      0    0    0
 # G10    0    0    0      1    0    0
 # G6     1    0    0      0    0    0
 # G7     0    0    0      0    0    1
-# G8     0    0    1      0    0    0
 # G9     0    0    0      0    1    0
 # H1     0    1    0      0    0    0
 # H10    0    0    0      1    0    0
@@ -433,6 +432,10 @@ print(datTraits)
 # H7     0    0    0      0    0    1
 # H8     0    0    1      0    0    0
 # H9     0    0    0      0    1    0
+# F6     1    0    0      0    0    0
+# F8     0    0    1      0    0    0
+# G1     0    1    0      0    0    0
+# G8     0    0    1      0    0    0
 
 #Define numbers of genes and samples
 nGenes = ncol(datExpr)
@@ -442,10 +445,9 @@ nSamples = nrow(datExpr)
 MEs0 = moduleEigengenes(datExpr, moduleColors,softPower=5)$eigengenes
 MEs = orderMEs(MEs0)
 names(MEs) #head
-# [1] "MEplum2"           "MEdarkmagenta"     "MEdarkorange"      "MEblack"          
-#  [5] "MEivory"           "MEpurple"          "MEsalmon4"         "MEskyblue"        
-#  [9] "MEwhite"           "MEyellowgreen"     "MEdarkolivegreen"  "MEthistle2"       
-# [13] "MEgreenyellow"     "MEpink"            "MElightcyan"       "MEorange"         
+# [1] "MEdarkred"        "MEturquoise"      "MEblack"          "MEpink"           "MElightgreen"    
+#  [6] "MEmediumpurple3"  "MEdarkturquoise"  "MEyellow4"        "MEskyblue2"       "MEfloralwhite"   
+# [11] "MEcoral1"         "MEcyan"           "MEblue"           "MEgrey60"         "MEpaleturquoise" 
 
 ## Correlations of traits and genes with eigengenes
 moduleTraitCor = cor(MEs, datTraits, use = "p");
@@ -453,7 +455,7 @@ moduleTraitPvalue = corPvalueStudent(moduleTraitCor, nSamples);
 Colors=sub("ME","",names(MEs))
 
 moduleTraitTree = hclust(dist(t(moduleTraitCor)), method = "average");
-pdf(file="/work/pi_hputnam_uri_edu/fscucchia/20250424_ENCORE_HawaiiTPC_Federica/ENCORE_Hawaii_TPC_Rstudio/GWENA/Mcap/Temp clustering based on module-trait correlation.pdf")
+pdf(file="/work/pi_hputnam_uri_edu/fscucchia/20250424_ENCORE_HawaiiTPC_Federica/ENCORE_Hawaii_TPC_Rstudio/GWENA/Pcom/Temp clustering based on module-trait correlation.pdf")
 plot(moduleTraitTree, main = "Group clustering based on module-trait correlation", sub="", xlab="", cex.lab = 1.5, cex.axis = 1.5, cex.main = 2)
 dev.off()
 
@@ -475,7 +477,7 @@ library(dendsort)
 row_dend = dendsort(hclust(dist(moduleTraitCor)))
 col_dend = dendsort(hclust(dist(t(moduleTraitCor))))
 
-pdf(file = "/work/pi_hputnam_uri_edu/fscucchia/20250424_ENCORE_HawaiiTPC_Federica/ENCORE_Hawaii_TPC_Rstudio/GWENA/Mcap/Module-trait-relationship-heatmap3.pdf", height = 11.5, width = 8)
+pdf(file = "/work/pi_hputnam_uri_edu/fscucchia/20250424_ENCORE_HawaiiTPC_Federica/ENCORE_Hawaii_TPC_Rstudio/GWENA/Pcom/Module-trait-relationship-heatmap3.pdf", height = 11.5, width = 8)
 ht=Heatmap(moduleTraitCor, name = "Module-Trait Eigengene Correlation", 
         col = blueWhiteRed(50), 
         row_names_side = "left", row_dend_side = "left",
@@ -499,45 +501,44 @@ dev.off()
 
 # View module eigengene data
 head(MEs)
-#         MEplum2 MEdarkmagenta MEdarkorange     MEblack    MEivory   MEpurple   MEsalmon4   MEskyblue
-# B1   0.06594039    -0.2993033   -0.2934318 -0.14503290 0.02064023 -0.2621171 -0.12212608 -0.07317448
-# B10 -0.27386213    -0.3248712   -0.2425439 -0.08834224 0.09621475 -0.2144316 -0.08429681  0.01814720
-# B6   0.02367071    -0.3033032   -0.2669567 -0.09628341 0.09555983 -0.2273501 -0.04835808 -0.02781063
-# B7  -0.14404129    -0.2532995   -0.3583206 -0.13122981 0.01916209  0.1329105  0.30885306 -0.12650133
+#      MEdarkred MEturquoise    MEblack      MEpink MElightgreen MEmediumpurple3 MEdarkturquoise
+# B1  -0.22664724 -0.02375949 -0.1633693 -0.11379582   -0.2374829     -0.25648779     -0.34484138
+# B10  0.13565047  0.09591296 -0.1056327 -0.04978991   -0.1173814      0.15293867      0.08895811
+# B6   0.06967086  0.16416343 -0.1582944 -0.04771290   -0.1613230     -0.13123134     -0.11420461
+# B8   0.17911387  0.11708019 -0.0927854  0.01983302   -0.1011754      0.30128045      0.09824477
 
 names(MEs)
-#  [1] "MEplum2"           "MEdarkmagenta"     "MEdarkorange"      "MEblack"          
-#  [5] "MEivory"           "MEpurple"          "MEsalmon4"         "MEskyblue"    
+#  [1] "MEdarkred"        "MEturquoise"      "MEblack"          "MEpink"           "MElightgreen"    
+#  [6] "MEmediumpurple3"  "MEdarkturquoise"  "MEyellow4"        "MEskyblue2"       "MEfloralwhite"   
 
 Strader_MEs <- MEs
 Strader_MEs$temp <- treatmentinfo$temp
 Strader_MEs$sample_id <- rownames(Strader_MEs)
 head(Strader_MEs)
-#        MEplum2 MEdarkmagenta MEdarkorange     MEblack    MEivory   MEpurple   MEsalmon4   MEskyblue
-# B1   0.06594039    -0.2993033   -0.2934318 -0.14503290 0.02064023 -0.2621171 -0.12212608 -0.07317448
-# B10 -0.27386213    -0.3248712   -0.2425439 -0.08834224 0.09621475 -0.2144316 -0.08429681  0.01814720
-# B6   0.02367071    -0.3033032   -0.2669567 -0.09628341 0.09555983 -0.2273501 -0.04835808 -0.02781063
+#       MEdarkred MEturquoise    MEblack      MEpink MElightgreen MEmediumpurple3 MEdarkturquoise
+# B1  -0.22664724 -0.02375949 -0.1633693 -0.11379582   -0.2374829     -0.25648779     -0.34484138
+# B10  0.13565047  0.09591296 -0.1056327 -0.04978991   -0.1173814      0.15293867      0.08895811
 
 # Calculate 10 over-arching expression patterns using mean eigengene for each module in a cluster
-C1_Strader_MEs <- select(Strader_MEs, MEplum2:MEdarkorange)
+C1_Strader_MEs <- select(Strader_MEs, MEdarkred:MEturquoise)
 C1_Strader_MEs$Mean <- rowMeans(C1_Strader_MEs)
-C2_Strader_MEs <- select(Strader_MEs, MEblack:MEsalmon4)
+C2_Strader_MEs <- select(Strader_MEs, MEblack:MEyellow4)
 C2_Strader_MEs$Mean <- rowMeans(C2_Strader_MEs)
-C3_Strader_MEs <- select(Strader_MEs, MEskyblue:MEthistle2)
+C3_Strader_MEs <- select(Strader_MEs, MEskyblue2:MEpaleturquoise)
 C3_Strader_MEs$Mean <- rowMeans(C3_Strader_MEs)
-C4_Strader_MEs <- select(Strader_MEs, MEgreenyellow:MEpink)
+C4_Strader_MEs <- select(Strader_MEs, MEhoneydew1)
 C4_Strader_MEs$Mean <- rowMeans(C4_Strader_MEs)
-C5_Strader_MEs <- select(Strader_MEs, MElightcyan:MEsalmon)
+C5_Strader_MEs <- select(Strader_MEs, MEantiquewhite4:MEyellow)
 C5_Strader_MEs$Mean <- rowMeans(C5_Strader_MEs)
-C6_Strader_MEs <- select(Strader_MEs, MElightgreen:MEsienna3)
+C6_Strader_MEs <- select(Strader_MEs, MEgreen:MEivory)
 C6_Strader_MEs$Mean <- rowMeans(C6_Strader_MEs)
-C7_Strader_MEs <- select(Strader_MEs, MElightcyan1:MElightyellow)
+C7_Strader_MEs <- select(Strader_MEs, MEmediumorchid:MEindianred4)
 C7_Strader_MEs$Mean <- rowMeans(C7_Strader_MEs)
-C8_Strader_MEs <- select(Strader_MEs, MEturquoise)
+C8_Strader_MEs <- select(Strader_MEs, MEmediumpurple2:MEnavajowhite2)
 C8_Strader_MEs$Mean <- rowMeans(C8_Strader_MEs)
-C9_Strader_MEs <- select(Strader_MEs, MEdarkgreen:MEgrey60)
+C9_Strader_MEs <- select(Strader_MEs, MEbrown4:MEdarkgreen)
 C9_Strader_MEs$Mean <- rowMeans(C9_Strader_MEs)
-C10_Strader_MEs <- select(Strader_MEs, MEbrown4:MEskyblue3)
+C10_Strader_MEs <- select(Strader_MEs, MEsalmon4:MElightpink4)
 C10_Strader_MEs$Mean <- rowMeans(C10_Strader_MEs)
 
 Strader_MEs$temp <- as.character(Strader_MEs$temp)
@@ -546,11 +547,11 @@ expressionProfile_data <- as.data.frame(cbind(temp = Strader_MEs$temp, cluster1=
                           cluster7 = C7_Strader_MEs$Mean,cluster8 = C8_Strader_MEs$Mean,cluster9 = C9_Strader_MEs$Mean,cluster10 = C10_Strader_MEs$Mean))
 
 head(expressionProfile_data)
-#   temp           cluster1            cluster2           cluster3           cluster4
-# 1   t18 -0.175598238178533  -0.127158968149933 -0.169637664501881  -0.17484121047813
-# 2 t26.8 -0.280425757295429 -0.0727139820327856 -0.146264686461688  -0.19489540478974
-# 3   t12 -0.182196382534518 -0.0691079364058859 -0.150357492317928 -0.194728300706314
-# 4   t35 -0.251887119971089  0.0824239549992588 -0.279288812026189 -0.190274112963049
+#    temp           cluster1            cluster2            cluster3            cluster4
+# 1   t18 -0.125203368871824  -0.238283336890726  -0.139233175300969   0.189039412050515
+# 2 t26.8  0.115781719170205  -0.004922996031784 -0.0953968799033358   0.484090743299738
+# 3   t12  0.116917146569611  -0.125645469846288  -0.156813727864529   -0.15329821040734
+# 4   t25     0.148097029453  0.0391409392243317  -0.101096903260113 -0.0308790113589991
 
 # save data of selected clusters for GO enrichment analysis
 
@@ -569,15 +570,25 @@ meanEigenClust3 <- expressionProfile_data$cluster3
 write.csv(meanEigenClust3, file = "meanEigenClust3.csv")
 write.csv(C3_Strader_MEs, file = "C3_Strader_MEs.csv")
 
-### save mean eigengene values for cluster5
-meanEigenClust5 <- expressionProfile_data$cluster5
-write.csv(meanEigenClust5, file = "meanEigenClust5.csv")
-write.csv(C5_Strader_MEs, file = "C5_Strader_MEs.csv")
+### save mean eigengene values for cluster1
+meanEigenClust1 <- expressionProfile_data$cluster1
+write.csv(meanEigenClust1, file = "meanEigenClust1.csv")
+write.csv(C1_Strader_MEs, file = "C1_Strader_MEs.csv")
 
-### save mean eigengene values for cluster6
-meanEigenClust6 <- expressionProfile_data$cluster6
-write.csv(meanEigenClust6, file = "meanEigenClust6.csv")
-write.csv(C6_Strader_MEs, file = "C6_Strader_MEs.csv")
+### save mean eigengene values for cluster5
+meanEigenClust4 <- expressionProfile_data$cluster4
+write.csv(meanEigenClust4, file = "meanEigenClust4.csv")
+write.csv(C5_Strader_MEs, file = "C4_Strader_MEs.csv")
+
+### save mean eigengene values for cluster10
+meanEigenClust10 <- expressionProfile_data$cluster10
+write.csv(meanEigenClust10, file = "meanEigenClust10.csv")
+write.csv(C10_Strader_MEs, file = "C10_Strader_MEs.csv")
+
+### save mean eigengene values for cluster7
+meanEigenClust7 <- expressionProfile_data$cluster7
+write.csv(meanEigenClust7, file = "meanEigenClust7.csv")
+write.csv(C7_Strader_MEs, file = "C7_Strader_MEs.csv")
 
 ### save mean eigengene values for cluster8
 meanEigenClust8 <- expressionProfile_data$cluster8
@@ -613,9 +624,9 @@ ggplot(expressionProfile_data_long, aes(x = temp, y = Eigengene)) +
        x = "Temperature Group",
        y = "cluster Eigengene Value")
 
-# Filter to exclude clusters 1,4,7 and 10 (no significant correlations in any of the temperature groups)
+# Filter to exclude clusters 5 and 6 (not significant correlations in any of the temperature groups)
 expressionProfile_data_long_subset <- expressionProfile_data_long %>%
-  filter(cluster %in% c("cluster2", "cluster3", "cluster5", "cluster6", "cluster8", "cluster9"))
+  filter(cluster %in% c("cluster1", "cluster2", "cluster3", "cluster4", "cluster10", "cluster7", "cluster8", "cluster9"))
 
 # Boxplot with dots, faceted by Module (only Module1 and Module2)
 ggplot(expressionProfile_data_long_subset, aes(x = temp, y = Eigengene)) +
@@ -631,8 +642,8 @@ ggplot(expressionProfile_data_long_subset, aes(x = temp, y = Eigengene)) +
 expressionProfile_data_long_subset$temp <- factor(expressionProfile_data_long_subset$temp, 
                                        levels = c("t12", "t18", "t25", "t26.8", "t30", "t35"))
 
-# Create a palette of green shades (light to dark)
-green_palette <- colorRampPalette(c("#69f0ae", "#00e676", "#006400"))(length(levels(expressionProfile_data_long_subset$temp)))
+# Create a palette of orange shades (light to dark)
+orange_palette <- colorRampPalette(c("#ffe0b2", "#ff9800", "#e65100"))(length(levels(expressionProfile_data_long_subset$temp)))
 
 # Plot with custom colors for boxplots and dots, and no grid
 ggplot(expressionProfile_data_long_subset, aes(x = temp, y = Eigengene, group = temp)) +
@@ -640,7 +651,7 @@ ggplot(expressionProfile_data_long_subset, aes(x = temp, y = Eigengene, group = 
   geom_boxplot(aes(color = temp), outlier.shape = NA, fill = NA, size = 0.5) +
   geom_jitter(aes(color = temp), width = 0.2, size = 2, show.legend = FALSE) +
   facet_wrap(~ cluster, scales = "free_y") +
-  scale_color_manual(values = green_palette) +
+  scale_color_manual(values = orange_palette) +
   scale_x_discrete(labels = c("t12" = "12", "t18" = "18", "t25" = "25", "t26.8" = "26.8", "t30" = "30", "t35" = "35")) +
   theme_bw() +
   labs(x = "Temperature",
@@ -651,16 +662,106 @@ ggplot(expressionProfile_data_long_subset, aes(x = temp, y = Eigengene, group = 
   )
 
 
+
 ### Use R package segmented
 #segmented is designed for regression models where you want to detect one 
 # or more breakpoints (change-points) in the relationship between a numeric 
 # predictor (here, temperature) and a response (eigengene value).
-### selected modules: 2,3,5,6,8,9
+### selected modules: 1,2,3,4,8,9,10
 
 library(segmented)
 
 # Make sure temp is numeric (remove "tt" if needed)
 expressionProfile_data_long_subset$temp_num <- as.numeric(sub("^t", "", expressionProfile_data_long_subset$temp))
+
+# Filter for the module of interest (e.g., cluster1)
+df_mod1 <- expressionProfile_data_long_subset %>% filter(cluster == "cluster1")
+
+# Fit linear model to all replicates
+fit1 <- lm(Eigengene ~ temp_num, data = df_mod1)
+
+# Fit segmented regression (e.g., 1 breakpoint)
+seg_fit1 <- segmented(fit1, seg.Z = ~temp_num, npsi = 1)
+
+summary(seg_fit1)
+plot(seg_fit1)
+# Estimated Break-Point(s):
+#                  Est. St.Err
+# psi1.temp_num 29.799  0.689
+# Coefficients of the linear terms:
+#              Estimate Std. Error t value Pr(>|t|)
+# (Intercept) -0.022809   0.097976  -0.233    0.819
+# temp_num     0.004276   0.004561   0.938    0.361
+# U1.temp_num -0.108656   0.016926  -6.419       NA
+# Residual standard error: 0.1067 on 18 degrees of freedom
+# Multiple R-Squared: 0.7679,  Adjusted R-squared: 0.7292 
+
+##  Get fitted values and confidence intervals
+# Get predicted values and confidence intervals
+library(segmented)
+library(boot)
+
+# Set up the bootstrap function
+# Function to fit segmented and predict at grid points
+boot_seg <- function(data, indices, grid_temp) {
+  d <- data[indices, ]
+  fit <- lm(Eigengene ~ temp_num, data = d)
+  seg_fit <- try(segmented(fit, seg.Z = ~temp_num, npsi = 1), silent = TRUE)
+  if (inherits(seg_fit, "try-error")) {
+    return(rep(NA, length(grid_temp)))
+  }
+  pred <- predict(seg_fit, newdata = data.frame(temp_num = grid_temp))
+  return(pred)
+}
+
+#Run the bootstrap
+set.seed(123)
+grid_temp <- seq(min(df_mod1$temp_num), max(df_mod1$temp_num), length.out = 200)
+boot_out <- boot(
+  data = df_mod1,
+  statistic = function(data, indices) boot_seg(data, indices, grid_temp),
+  R = 1000 # Number of bootstrap replicates
+)
+
+#Calculate confidence intervals
+# Each row is a bootstrap, each column is a grid point
+boot_preds <- boot_out$t
+
+# Calculate 2.5% and 97.5% quantiles for each grid point
+ci_lower <- apply(boot_preds, 2, quantile, probs = 0.025, na.rm = TRUE)
+ci_upper <- apply(boot_preds, 2, quantile, probs = 0.975, na.rm = TRUE)
+fit_median <- apply(boot_preds, 2, median, na.rm = TRUE)
+
+# Prepare for plotting
+pred_df1_boot <- data.frame(
+  temp_num = grid_temp,
+  fit = fit_median,
+  lower = ci_lower,
+  upper = ci_upper
+)
+
+##Overlay on your Strader plot
+df_mod1$temp_num <- as.numeric(sub("^t", "", df_mod1$temp))
+df_mod1$temp_num_f <- factor(df_mod1$temp_num)
+
+ggplot(df_mod1, aes(x = temp_num, y = Eigengene, group = temp_num_f)) +
+  geom_hline(yintercept = 0, linetype = "dotted", color = "grey50", size = 0.7) +
+  geom_boxplot(aes(color = temp_num_f, group = temp_num_f), outlier.shape = NA, fill = NA, size = 0.5) +
+  geom_jitter(aes(color = temp_num_f), width = 0.2, size = 2, show.legend = FALSE) +
+  geom_line(data = pred_df1_boot, aes(x = temp_num, y = fit), color = "red", linewidth = 0.7, inherit.aes = FALSE) +
+  geom_ribbon(data = pred_df1_boot, aes(x = temp_num, ymin = lower, ymax = upper), alpha = 0.1, fill = "red", inherit.aes = FALSE) +
+  scale_color_manual(values = orange_palette) +
+  scale_x_continuous(
+    breaks = unique(df_mod1$temp_num),
+    labels = gsub("^t", "", unique(df_mod1$temp))
+  ) +
+  theme_bw() +
+  labs(x = "Temperature (°C)", y = "Module Eigengene Value",
+       title = "Module1: Strader Plot with Bootstrapped Segmented Regression CI") +
+  theme(
+    strip.background = element_rect(fill = "#e0ffff", color = NA),
+    panel.grid = element_blank()
+  )
 
 # Filter for the module of interest (e.g., cluster2)
 df_mod2 <- expressionProfile_data_long_subset %>% filter(cluster == "cluster2")
@@ -675,22 +776,79 @@ summary(seg_fit2)
 plot(seg_fit2)
 # Estimated Break-Point(s):
 #                  Est. St.Err
-# psi1.temp_num 20.688  5.547
+# psi1.temp_num 28.845   2.33
 # Coefficients of the linear terms:
-#             Estimate Std. Error t value Pr(>|t|)
-# (Intercept)  0.19971    0.30992   0.644    0.527
-# temp_num    -0.01517    0.02026  -0.749    0.463
-# U1.temp_num  0.03022    0.02321   1.302       NA
-# Residual standard error: 0.1719 on 20 degrees of freedom
-# Multiple R-Squared: 0.1168,  Adjusted R-squared: -0.01569 
+#              Estimate Std. Error t value Pr(>|t|)  
+# (Intercept) -0.293692   0.141350  -2.078   0.0523 .
+# temp_num     0.014282   0.006581   2.170   0.0436 *
+# U1.temp_num -0.050622   0.024420  -2.073       NA  
+# ---
+# Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+# Residual standard error: 0.1539 on 18 degrees of freedom
+# Multiple R-Squared: 0.2829,  Adjusted R-squared: 0.1633 
 
-#There is no significant breakpoint in this fit.
-#The estimated breakpoint (psi1.temp_num) is at 20.7°C, but the standard error is large (5.5), 
-# indicating high uncertainty. The slope before the breakpoint (temp_num) and the change in slope 
-# after the breakpoint (U1.temp_num) both have high p-values (0.463 and NA), meaning they are not statistically 
-# significant. R-squared is very low (0.12), and the adjusted R-squared is negative, indicating the model 
-# does not explain the data well. There is no evidence for a significant breakpoint or trend in eigengene 
-# values for this cluster across temperature. The data do not support a segmented (piecewise) relationship here.
+# Set up the bootstrap function
+# Function to fit segmented and predict at grid points
+boot_seg <- function(data, indices, grid_temp) {
+  d <- data[indices, ]
+  fit <- lm(Eigengene ~ temp_num, data = d)
+  seg_fit <- try(segmented(fit, seg.Z = ~temp_num, npsi = 1), silent = TRUE)
+  if (inherits(seg_fit, "try-error")) {
+    return(rep(NA, length(grid_temp)))
+  }
+  pred <- predict(seg_fit, newdata = data.frame(temp_num = grid_temp))
+  return(pred)
+}
+
+#Run the bootstrap
+set.seed(123)
+grid_temp <- seq(min(df_mod2$temp_num), max(df_mod2$temp_num), length.out = 200)
+boot_out <- boot(
+  data = df_mod2,
+  statistic = function(data, indices) boot_seg(data, indices, grid_temp),
+  R = 1000 # Number of bootstrap replicates
+)
+
+#Calculate confidence intervals
+# Each row is a bootstrap, each column is a grid point
+boot_preds <- boot_out$t
+
+# Calculate 2.5% and 97.5% quantiles for each grid point
+ci_lower <- apply(boot_preds, 2, quantile, probs = 0.025, na.rm = TRUE)
+ci_upper <- apply(boot_preds, 2, quantile, probs = 0.975, na.rm = TRUE)
+fit_median <- apply(boot_preds, 2, median, na.rm = TRUE)
+
+# Prepare for plotting
+pred_df2_boot <- data.frame(
+  temp_num = grid_temp,
+  fit = fit_median,
+  lower = ci_lower,
+  upper = ci_upper
+)
+
+##Overlay on your Strader plot
+df_mod2$temp_num <- as.numeric(sub("^t", "", df_mod2$temp))
+df_mod2$temp_num_f <- factor(df_mod2$temp_num)
+
+ggplot(df_mod2, aes(x = temp_num, y = Eigengene, group = temp_num_f)) +
+  geom_hline(yintercept = 0, linetype = "dotted", color = "grey50", size = 0.7) +
+  geom_boxplot(aes(color = temp_num_f, group = temp_num_f), outlier.shape = NA, fill = NA, size = 0.5) +
+  geom_jitter(aes(color = temp_num_f), width = 0.2, size = 2, show.legend = FALSE) +
+  geom_line(data = pred_df2_boot, aes(x = temp_num, y = fit), color = "red", linewidth = 0.7, inherit.aes = FALSE) +
+  geom_ribbon(data = pred_df2_boot, aes(x = temp_num, ymin = lower, ymax = upper), alpha = 0.1, fill = "red", inherit.aes = FALSE) +
+  scale_color_manual(values = orange_palette) +
+  scale_x_continuous(
+    breaks = unique(df_mod2$temp_num),
+    labels = gsub("^t", "", unique(df_mod2$temp))
+  ) +
+  theme_bw() +
+  labs(x = "Temperature (°C)", y = "Module Eigengene Value",
+       title = "Module2: Strader Plot with Bootstrapped Segmented Regression CI") +
+  theme(
+    strip.background = element_rect(fill = "#e0ffff", color = NA),
+    panel.grid = element_blank()
+  )
+
 
 # Filter for the module of interest (e.g., cluster3)
 df_mod3 <- expressionProfile_data_long_subset %>% filter(cluster == "cluster3")
@@ -702,56 +860,26 @@ fit3 <- lm(Eigengene ~ temp_num, data = df_mod3)
 seg_fit3 <- segmented(fit3, seg.Z = ~temp_num, npsi = 1)
 
 summary(seg_fit3)
-#Multiple R-Squared: 0.03849 - There is no significant breakpoint in this fit
 plot(seg_fit3)
-
-
-
-# Filter for the module of interest (e.g., cluster5)
-df_mod5 <- expressionProfile_data_long_subset %>% filter(cluster == "cluster5")
-
-# Fit linear model to all replicates
-fit5 <- lm(Eigengene ~ temp_num, data = df_mod5)
-
-# Fit segmented regression (e.g., 1 breakpoint)
-seg_fit5 <- segmented(fit5, seg.Z = ~temp_num, npsi = 2)
-
-summary(seg_fit5)
-#Multiple R-Squared: 0.03849 - There is no significant breakpoint in this fit
-plot(seg_fit5)
 # Estimated Break-Point(s):
-#                  Est. St.Err
-# psi1.temp_num 22.097  3.282
-# psi2.temp_num 28.663  1.177
+#                Est. St.Err
+# psi1.temp_num   30  1.375
 # Coefficients of the linear terms:
-#             Estimate Std. Error t value Pr(>|t|)  
-# (Intercept)  0.31840    0.17215   1.850   0.0809 .
-# temp_num    -0.01749    0.01125  -1.554   0.1376  
-# U1.temp_num  0.05189    0.03916   1.325       NA  
-# U2.temp_num -0.10649    0.03987  -2.671       NA  
+#              Estimate Std. Error t value Pr(>|t|)  
+# (Intercept) -0.187200   0.103360  -1.811   0.0868 .
+# temp_num     0.006121   0.004812   1.272   0.2195  
+# U1.temp_num  0.056564   0.017856   3.168       NA  
 # ---
 # Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
-# Residual standard error: 0.09549 on 18 degrees of freedom
-# Multiple R-Squared: 0.7367,  Adjusted R-squared: 0.6636 
-
-# Are the breakpoints significant?
-# The model fit is good (high R²).
-# The second change in slope (U2.temp_num) is likely meaningful, given the t value, but the 
-# package does not provide a p-value for it. Standard errors for breakpoints are not huge, so the 
-# locations are reasonably certain. Slopes before and after breakpoints: Only the last change 
-# in slope (U2.temp_num) appears to be substantial (t value -2.67).
-
-##  Get fitted values and confidence intervals
-# Get predicted values and confidence intervals
-library(segmented)
-library(boot)
+# Residual standard error: 0.1126 on 18 degrees of freedom
+# Multiple R-Squared: 0.6151,  Adjusted R-squared: 0.5509 
 
 # Set up the bootstrap function
 # Function to fit segmented and predict at grid points
 boot_seg <- function(data, indices, grid_temp) {
   d <- data[indices, ]
   fit <- lm(Eigengene ~ temp_num, data = d)
-  seg_fit <- try(segmented(fit, seg.Z = ~temp_num, npsi = 2), silent = TRUE)
+  seg_fit <- try(segmented(fit, seg.Z = ~temp_num, npsi = 1), silent = TRUE)
   if (inherits(seg_fit, "try-error")) {
     return(rep(NA, length(grid_temp)))
   }
@@ -764,10 +892,11 @@ boot_seg <- function(data, indices, grid_temp) {
 # to estimate the variability of the fit (and thus the confidence intervals) by refitting the model on resampled data.
 # But: The red line you plot (fit in pred_df1_boot) is the median of the bootstrapped fits at each grid point, not the fit from your 
 # original seg_fit1 object.
+
 set.seed(123)
-grid_temp <- seq(min(df_mod5$temp_num), max(df_mod5$temp_num), length.out = 200)
+grid_temp <- seq(min(df_mod3$temp_num), max(df_mod3$temp_num), length.out = 200)
 boot_out <- boot(
-  data = df_mod5,
+  data = df_mod3,
   statistic = function(data, indices) boot_seg(data, indices, grid_temp),
   R = 1000 # Number of bootstrap replicates
 )
@@ -782,7 +911,7 @@ ci_upper <- apply(boot_preds, 2, quantile, probs = 0.975, na.rm = TRUE)
 fit_median <- apply(boot_preds, 2, median, na.rm = TRUE)
 
 # Prepare for plotting
-pred_df5_boot <- data.frame(
+pred_df3_boot <- data.frame(
   temp_num = grid_temp,
   fit = fit_median,
   lower = ci_lower,
@@ -790,124 +919,75 @@ pred_df5_boot <- data.frame(
 )
 
 ##Overlay on your Strader plot
-df_mod5$temp_num <- as.numeric(sub("^t", "", df_mod5$temp))
+df_mod3$temp_num <- as.numeric(sub("^t", "", df_mod3$temp))
+df_mod3$temp_num_f <- factor(df_mod3$temp_num)
 
-df_mod5$temp_num_f <- factor(df_mod5$temp_num)
-ggplot(df_mod5, aes(x = temp_num, y = Eigengene, group = temp_num_f)) +
+ggplot(df_mod3, aes(x = temp_num, y = Eigengene, group = temp_num_f)) +
   geom_hline(yintercept = 0, linetype = "dotted", color = "grey50", size = 0.7) +
   geom_boxplot(aes(color = temp_num_f, group = temp_num_f), outlier.shape = NA, fill = NA, size = 0.5) +
   geom_jitter(aes(color = temp_num_f), width = 0.2, size = 2, show.legend = FALSE) +
-  geom_line(data = pred_df5_boot, aes(x = temp_num, y = fit), color = "red", linewidth = 0.7, inherit.aes = FALSE) +
-  geom_ribbon(data = pred_df5_boot, aes(x = temp_num, ymin = lower, ymax = upper), alpha = 0.1, fill = "red", inherit.aes = FALSE) +
-  scale_color_manual(values = green_palette) +
+  geom_line(data = pred_df3_boot, aes(x = temp_num, y = fit), color = "red", linewidth = 0.7, inherit.aes = FALSE) +
+  geom_ribbon(data = pred_df3_boot, aes(x = temp_num, ymin = lower, ymax = upper), alpha = 0.1, fill = "red", inherit.aes = FALSE) +
+  scale_color_manual(values = orange_palette) +
   scale_x_continuous(
-    breaks = unique(df_mod5$temp_num),
-    labels = gsub("^t", "", unique(df_mod5$temp))
+    breaks = unique(df_mod3$temp_num),
+    labels = gsub("^t", "", unique(df_mod3$temp))
   ) +
   theme_bw() +
   labs(x = "Temperature (°C)", y = "Module Eigengene Value",
-       title = "Module5: Strader Plot with Bootstrapped Segmented Regression CI") +
+       title = "Module3: Strader Plot with Bootstrapped Segmented Regression CI") +
   theme(
     strip.background = element_rect(fill = "#e0ffff", color = NA),
     panel.grid = element_blank()
   )
 
 
-# Filter for the module of interest (e.g., cluster6)
-df_mod6 <- expressionProfile_data_long_subset %>% filter(cluster == "cluster6")
+# Filter for the module of interest (e.g., cluster4)
+df_mod4 <- expressionProfile_data_long_subset %>% filter(cluster == "cluster4")
 
 # Fit linear model to all replicates
-fit6 <- lm(Eigengene ~ temp_num, data = df_mod6)
+fit4 <- lm(Eigengene ~ temp_num, data = df_mod4)
 
 # Fit segmented regression (e.g., 1 breakpoint)
-seg_fit6 <- segmented(fit6, seg.Z = ~temp_num, npsi = 2)
+seg_fit4 <- segmented(fit4, seg.Z = ~temp_num, npsi = 1)
 
-summary(seg_fit6)
-# Call: 
-# segmented.lm(obj = fit6, seg.Z = ~temp_num, npsi = 2)
+summary(seg_fit4)
+plot(seg_fit4)
 # Estimated Break-Point(s):
-#                  Est. St.Err
-# psi1.temp_num 18.502  3.603
-# psi2.temp_num 29.804  2.254
+#                Est. St.Err
+# psi1.temp_num 26.8  5.891
 # Coefficients of the linear terms:
-#             Estimate Std. Error t value Pr(>|t|)   
-# (Intercept)  0.43566    0.19847   2.195   0.0415 * 
-# temp_num    -0.04136    0.01297  -3.188   0.0051 **
-# U1.temp_num  0.09099    0.04515   2.015       NA   
-# U2.temp_num -0.08096    0.04597  -1.761       NA   
-# ---
-# Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
-# Residual standard error: 0.1101 on 18 degrees of freedom
-# Multiple R-Squared: 0.7474,  Adjusted R-squared: 0.6772 
-# Boot restarting based on 6 samples. Last fit:
-# Convergence attained in 2 iterations (rel. change 7.9211e-11))
+#              Estimate Std. Error t value Pr(>|t|)
+# (Intercept) -0.296590   0.200592  -1.479    0.157
+# temp_num     0.014739   0.009339   1.578    0.132
+# U1.temp_num -0.036063   0.034654  -1.041       NA
+# Residual standard error: 0.2185 on 18 degrees of freedom
+# Multiple R-Squared: 0.1409,  Adjusted R-squared: -0.002335 
 
-##  Get fitted values and confidence intervals
-# Get predicted values and confidence intervals
-library(segmented)
-library(boot)
 
-# Set up the bootstrap function
-# Function to fit segmented and predict at grid points
-boot_seg <- function(data, indices, grid_temp) {
-  d <- data[indices, ]
-  fit <- lm(Eigengene ~ temp_num, data = d)
-  seg_fit <- try(segmented(fit, seg.Z = ~temp_num, npsi = 2), silent = TRUE)
-  if (inherits(seg_fit, "try-error")) {
-    return(rep(NA, length(grid_temp)))
-  }
-  pred <- predict(seg_fit, newdata = data.frame(temp_num = grid_temp))
-  return(pred)
-}
 
-#Run the bootstrap
-set.seed(123)
-grid_temp <- seq(min(df_mod6$temp_num), max(df_mod6$temp_num), length.out = 200)
-boot_out <- boot(
-  data = df_mod6,
-  statistic = function(data, indices) boot_seg(data, indices, grid_temp),
-  R = 1000 # Number of bootstrap replicates
-)
+# Filter for the module of interest (e.g., cluster7)
+df_mod7 <- expressionProfile_data_long_subset %>% filter(cluster == "cluster7")
 
-#Calculate confidence intervals
-# Each row is a bootstrap, each column is a grid point
-boot_preds <- boot_out$t
+# Fit linear model to all replicates
+fit7 <- lm(Eigengene ~ temp_num, data = df_mod7)
 
-# Calculate 2.5% and 97.5% quantiles for each grid point
-ci_lower <- apply(boot_preds, 2, quantile, probs = 0.025, na.rm = TRUE)
-ci_upper <- apply(boot_preds, 2, quantile, probs = 0.975, na.rm = TRUE)
-fit_median <- apply(boot_preds, 2, median, na.rm = TRUE)
+# Fit segmented regression (e.g., 1 breakpoint)
+seg_fit7 <- segmented(fit7, seg.Z = ~temp_num, npsi = 1)
 
-# Prepare for plotting
-pred_df6_boot <- data.frame(
-  temp_num = grid_temp,
-  fit = fit_median,
-  lower = ci_lower,
-  upper = ci_upper
-)
+summary(seg_fit7)
+plot(seg_fit7)
+# Estimated Break-Point(s):
+#                Est. St.Err
+# psi1.temp_num   30 16.158
+# Coefficients of the linear terms:
+#              Estimate Std. Error t value Pr(>|t|)
+# (Intercept) -0.150487   0.169169  -0.890    0.385
+# temp_num     0.005976   0.007876   0.759    0.458
+# U1.temp_num  0.007881   0.029225   0.270       NA
+# Residual standard error: 0.1842 on 18 degrees of freedom
+# Multiple R-Squared: 0.09334,  Adjusted R-squared: -0.05777 
 
-##Overlay on your Strader plot
-df_mod6$temp_num <- as.numeric(sub("^t", "", df_mod6$temp))
-
-df_mod6$temp_num_f <- factor(df_mod6$temp_num)
-ggplot(df_mod6, aes(x = temp_num, y = Eigengene, group = temp_num_f)) +
-  geom_hline(yintercept = 0, linetype = "dotted", color = "grey50", size = 0.7) +
-  geom_boxplot(aes(color = temp_num_f, group = temp_num_f), outlier.shape = NA, fill = NA, size = 0.5) +
-  geom_jitter(aes(color = temp_num_f), width = 0.2, size = 2, show.legend = FALSE) +
-  geom_line(data = pred_df6_boot, aes(x = temp_num, y = fit), color = "red", linewidth = 0.7, inherit.aes = FALSE) +
-  geom_ribbon(data = pred_df6_boot, aes(x = temp_num, ymin = lower, ymax = upper), alpha = 0.1, fill = "red", inherit.aes = FALSE) +
-  scale_color_manual(values = green_palette) +
-  scale_x_continuous(
-    breaks = unique(df_mod6$temp_num),
-    labels = gsub("^t", "", unique(df_mod6$temp))
-  ) +
-  theme_bw() +
-  labs(x = "Temperature (°C)", y = "Module Eigengene Value",
-       title = "Module6: Strader Plot with Bootstrapped Segmented Regression CI") +
-  theme(
-    strip.background = element_rect(fill = "#e0ffff", color = NA),
-    panel.grid = element_blank()
-  )
 
 
 # Filter for the module of interest (e.g., cluster8)
@@ -917,38 +997,32 @@ df_mod8 <- expressionProfile_data_long_subset %>% filter(cluster == "cluster8")
 fit8 <- lm(Eigengene ~ temp_num, data = df_mod8)
 
 # Fit segmented regression (e.g., 1 breakpoint)
-seg_fit8 <- segmented(fit8, seg.Z = ~temp_num, npsi = 2)
+seg_fit8 <- segmented(fit8, seg.Z = ~temp_num, npsi = 1)
 
 summary(seg_fit8)
+plot(seg_fit8)
 # Estimated Break-Point(s):
-#                  Est. St.Err
-# psi1.temp_num 19.662 12.142
-# psi2.temp_num 29.400  1.355
+#                Est. St.Err
+# psi1.temp_num   18  1.718
+
 # Coefficients of the linear terms:
-#             Estimate Std. Error t value Pr(>|t|)
-# (Intercept) -0.23296    0.17064  -1.365    0.189
-# temp_num     0.01020    0.01115   0.915    0.372
-# U1.temp_num -0.01996    0.03882  -0.514       NA
-# U2.temp_num  0.10673    0.03952   2.701       NA
+#             Estimate Std. Error t value Pr(>|t|)  
+# (Intercept) -0.57703    0.24089  -2.395   0.0277 *
+# temp_num     0.04626    0.01620   2.856   0.0105 *
+# U1.temp_num -0.07408    0.01859  -3.985       NA  
+# ---
+# Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 
-# Residual standard error: 0.09465 on 18 degrees of freedom
-# Multiple R-Squared: 0.8387,  Adjusted R-squared: 0.7939 
+# Residual standard error: 0.1273 on 18 degrees of freedom
+# Multiple R-Squared: 0.5655,  Adjusted R-squared: 0.4931 
 
-# Boot restarting based on 6 samples. Last fit:
-# Convergence attained in 2 iterations (rel. change 8.2986e-12)
-
-
-##  Get fitted values and confidence intervals
-# Get predicted values and confidence intervals
-library(segmented)
-library(boot)
 
 # Set up the bootstrap function
 # Function to fit segmented and predict at grid points
 boot_seg <- function(data, indices, grid_temp) {
   d <- data[indices, ]
   fit <- lm(Eigengene ~ temp_num, data = d)
-  seg_fit <- try(segmented(fit, seg.Z = ~temp_num, npsi = 2), silent = TRUE)
+  seg_fit <- try(segmented(fit, seg.Z = ~temp_num, npsi = 1), silent = TRUE)
   if (inherits(seg_fit, "try-error")) {
     return(rep(NA, length(grid_temp)))
   }
@@ -957,6 +1031,11 @@ boot_seg <- function(data, indices, grid_temp) {
 }
 
 #Run the bootstrap
+# your current bootstrap code is recalculating the segmented fit for each bootstrap sample—that’s the whole point of the bootstrap: 
+# to estimate the variability of the fit (and thus the confidence intervals) by refitting the model on resampled data.
+# But: The red line you plot (fit in pred_df1_boot) is the median of the bootstrapped fits at each grid point, not the fit from your 
+# original seg_fit1 object.
+
 set.seed(123)
 grid_temp <- seq(min(df_mod8$temp_num), max(df_mod8$temp_num), length.out = 200)
 boot_out <- boot(
@@ -984,15 +1063,15 @@ pred_df8_boot <- data.frame(
 
 ##Overlay on your Strader plot
 df_mod8$temp_num <- as.numeric(sub("^t", "", df_mod8$temp))
-
 df_mod8$temp_num_f <- factor(df_mod8$temp_num)
+
 ggplot(df_mod8, aes(x = temp_num, y = Eigengene, group = temp_num_f)) +
   geom_hline(yintercept = 0, linetype = "dotted", color = "grey50", size = 0.7) +
   geom_boxplot(aes(color = temp_num_f, group = temp_num_f), outlier.shape = NA, fill = NA, size = 0.5) +
   geom_jitter(aes(color = temp_num_f), width = 0.2, size = 2, show.legend = FALSE) +
   geom_line(data = pred_df8_boot, aes(x = temp_num, y = fit), color = "red", linewidth = 0.7, inherit.aes = FALSE) +
   geom_ribbon(data = pred_df8_boot, aes(x = temp_num, ymin = lower, ymax = upper), alpha = 0.1, fill = "red", inherit.aes = FALSE) +
-  scale_color_manual(values = green_palette) +
+  scale_color_manual(values = orange_palette) +
   scale_x_continuous(
     breaks = unique(df_mod8$temp_num),
     labels = gsub("^t", "", unique(df_mod8$temp))
@@ -1013,27 +1092,22 @@ df_mod9 <- expressionProfile_data_long_subset %>% filter(cluster == "cluster9")
 fit9 <- lm(Eigengene ~ temp_num, data = df_mod9)
 
 # Fit segmented regression (e.g., 1 breakpoint)
-seg_fit9 <- segmented(fit9, seg.Z = ~temp_num, npsi = 2)
+seg_fit9 <- segmented(fit9, seg.Z = ~temp_num, npsi = 1)
 
 summary(seg_fit9)
-
-##  Get fitted values and confidence intervals
-# Get predicted values and confidence intervals
-library(segmented)
-library(boot)
-
-# Set up the bootstrap function
-# Function to fit segmented and predict at grid points
-boot_seg <- function(data, indices, grid_temp) {
-  d <- data[indices, ]
-  fit <- lm(Eigengene ~ temp_num, data = d)
-  seg_fit <- try(segmented(fit, seg.Z = ~temp_num, npsi = 2), silent = TRUE)
-  if (inherits(seg_fit, "try-error")) {
-    return(rep(NA, length(grid_temp)))
-  }
-  pred <- predict(seg_fit, newdata = data.frame(temp_num = grid_temp))
-  return(pred)
-}
+plot(seg_fit9)
+# Estimated Break-Point(s):
+#                  Est. St.Err
+# psi1.temp_num 28.612  1.623
+# Coefficients of the linear terms:
+#             Estimate Std. Error t value Pr(>|t|)   
+# (Intercept)  0.52977    0.14305   3.703  0.00163 **
+# temp_num    -0.02531    0.00666  -3.800  0.00131 **
+# U1.temp_num  0.07543    0.02471   3.052       NA   
+# ---
+# Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+# Residual standard error: 0.1558 on 18 degrees of freedom
+# Multiple R-Squared: 0.5136,  Adjusted R-squared: 0.4325 
 
 #Run the bootstrap
 set.seed(123)
@@ -1043,6 +1117,7 @@ boot_out <- boot(
   statistic = function(data, indices) boot_seg(data, indices, grid_temp),
   R = 1000 # Number of bootstrap replicates
 )
+#colSums(!is.na(boot_preds))
 
 #Calculate confidence intervals
 # Each row is a bootstrap, each column is a grid point
@@ -1063,15 +1138,15 @@ pred_df9_boot <- data.frame(
 
 ##Overlay on your Strader plot
 df_mod9$temp_num <- as.numeric(sub("^t", "", df_mod9$temp))
-
 df_mod9$temp_num_f <- factor(df_mod9$temp_num)
+
 ggplot(df_mod9, aes(x = temp_num, y = Eigengene, group = temp_num_f)) +
   geom_hline(yintercept = 0, linetype = "dotted", color = "grey50", size = 0.7) +
   geom_boxplot(aes(color = temp_num_f, group = temp_num_f), outlier.shape = NA, fill = NA, size = 0.5) +
   geom_jitter(aes(color = temp_num_f), width = 0.2, size = 2, show.legend = FALSE) +
   geom_line(data = pred_df9_boot, aes(x = temp_num, y = fit), color = "red", linewidth = 0.7, inherit.aes = FALSE) +
   geom_ribbon(data = pred_df9_boot, aes(x = temp_num, ymin = lower, ymax = upper), alpha = 0.1, fill = "red", inherit.aes = FALSE) +
-  scale_color_manual(values = green_palette) +
+  scale_color_manual(values = orange_palette) +
   scale_x_continuous(
     breaks = unique(df_mod9$temp_num),
     labels = gsub("^t", "", unique(df_mod9$temp))
@@ -1085,98 +1160,156 @@ ggplot(df_mod9, aes(x = temp_num, y = Eigengene, group = temp_num_f)) +
   )
 
 
+# Filter for the module of interest (e.g., cluster10)
+df_mod10 <- expressionProfile_data_long_subset %>% filter(cluster == "cluster10")
 
+# Fit linear model to all replicates
+fit10 <- lm(Eigengene ~ temp_num, data = df_mod10)
 
+# Fit segmented regression (e.g., 1 breakpoint)
+seg_fit10 <- segmented(fit10, seg.Z = ~temp_num, npsi = 1)
+
+summary(seg_fit10)
+plot(seg_fit10)
+# Estimated Break-Point(s):
+#                  Est. St.Err
+# psi1.temp_num 26.801   6.56
+# Coefficients of the linear terms:
+#              Estimate Std. Error t value Pr(>|t|)    
+# (Intercept)  0.533234   0.091388   5.835 1.58e-05 ***
+# temp_num    -0.022993   0.004255  -5.404 3.90e-05 ***
+# U1.temp_num  0.014752   0.015788   0.934       NA    
+# ---
+# Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+# Residual standard error: 0.09953 on 18 degrees of freedom
+# Multiple R-Squared: 0.7197,  Adjusted R-squared: 0.673 
+
+#no break-point but The coefficient for temp_num is highly significant (t = -5.404, p = 3.9e-05), indicating a strong linear relationship between temperature and eigengene value across the full range.
+
+#Run the bootstrap
+set.seed(123)
+grid_temp <- seq(min(df_mod9$temp_num), max(df_mod10$temp_num), length.out = 200)
+boot_out <- boot(
+  data = df_mod9,
+  statistic = function(data, indices) boot_seg(data, indices, grid_temp),
+  R = 1000 # Number of bootstrap replicates
+)
+#colSums(!is.na(boot_preds))
+
+#Calculate confidence intervals
+# Each row is a bootstrap, each column is a grid point
+boot_preds <- boot_out$t
+
+# Calculate 2.5% and 97.5% quantiles for each grid point
+ci_lower <- apply(boot_preds, 2, quantile, probs = 0.025, na.rm = TRUE)
+ci_upper <- apply(boot_preds, 2, quantile, probs = 0.975, na.rm = TRUE)
+fit_median <- apply(boot_preds, 2, median, na.rm = TRUE)
+
+# Prepare for plotting
+pred_df10_boot <- data.frame(
+  temp_num = grid_temp,
+  fit = fit_median,
+  lower = ci_lower,
+  upper = ci_upper
+)
+
+##Overlay on your Strader plot
+df_mod10$temp_num <- as.numeric(sub("^t", "", df_mod10$temp))
+df_mod10$temp_num_f <- factor(df_mod10$temp_num)
+
+ggplot(df_mod10, aes(x = temp_num, y = Eigengene, group = temp_num_f)) +
+  geom_hline(yintercept = 0, linetype = "dotted", color = "grey50", size = 0.7) +
+  geom_boxplot(aes(color = temp_num_f, group = temp_num_f), outlier.shape = NA, fill = NA, size = 0.5) +
+  geom_jitter(aes(color = temp_num_f), width = 0.2, size = 2, show.legend = FALSE) +
+  geom_line(data = pred_df10_boot, aes(x = temp_num, y = fit), color = "red", linewidth = 0.7, inherit.aes = FALSE) +
+  geom_ribbon(data = pred_df10_boot, aes(x = temp_num, ymin = lower, ymax = upper), alpha = 0.1, fill = "red", inherit.aes = FALSE) +
+  scale_color_manual(values = orange_palette) +
+  scale_x_continuous(
+    breaks = unique(df_mod10$temp_num),
+    labels = gsub("^t", "", unique(df_mod10$temp))
+  ) +
+  theme_bw() +
+  labs(x = "Temperature (°C)", y = "Module Eigengene Value",
+       title = "Module10: Strader Plot with Bootstrapped Segmented Regression CI") +
+  theme(
+    strip.background = element_rect(fill = "#e0ffff", color = NA),
+    panel.grid = element_blank()
+  )
 
 
 ############## Find Hub Genes and Network Analysis
 
-### export network of clusters with significant breakpoints and trends (cluster5, cluster6, cluster8, cluster9) - see analysis above
+### export network of clusters with significant breakpoints and trends (clusters 1, 2, 3, 9, 10) - see analysis above
 
 # Subset samples for each group
 control_samples <- treatmentinfo$sample_id[treatmentinfo$temp == "t26.8"]
 treat30_samples <- treatmentinfo$sample_id[treatmentinfo$temp == "t30"]
 treat35_samples <- treatmentinfo$sample_id[treatmentinfo$temp == "t35"]
 
-#### Export the network of a specific cluster - cluster5
-cluster5_modules <- c("lightcyan", "orange", "blue", "salmon") #Define the module colors for your cluster of interest
-inCluster5 <- moduleColors %in% cluster5_modules #Select genes belonging to these modules
-cluster5_genes <- colnames(datExpr)[inCluster5]  ##10326
-
-##Save only the essentials for Network Analysis
-# save(
-#   datExpr,     
-#   moduleColors,
-#   control_samples,
-#   treat30_samples,
-#   treat35_samples,
-#   file = "network_analysis_essentials_Mcap.RData"
-# )
+#### Export the network of a specific cluster - cluster1
+cluster1_modules <- c("darkred", "turquoise")  # replace with your actual module colors for cluster1
+inCluster <- moduleColors %in% cluster1_modules #Select genes belonging to these modules
+cluster1_genes <- probes[inCluster] ##8814
 
 # Subset expression data for each group
-datExpr_control_cluster5 <- datExpr[control_samples, cluster5_genes ]
-datExpr_treat30_cluster5 <- datExpr[treat30_samples, cluster5_genes ]
-datExpr_treat35_cluster5 <- datExpr[treat35_samples, cluster5_genes ]
+datExpr_control_cluster1 <- datExpr[control_samples, cluster1_genes ]
+datExpr_treat30_cluster1 <- datExpr[treat30_samples, cluster1_genes ]
+datExpr_treat35_cluster1 <- datExpr[treat35_samples, cluster1_genes ]
 
 # Calculate intramodular connectivity for for all genes in a cluster/module using only the genes in that module and only the samples for each condition
 # kWithin: sum of connection strengths with other module genes
 #add genes names to connectivity vectors
-# kWithin_control <- softConnectivity(datExpr_control_cluster5)
-# names(kWithin_control) <- colnames(datExpr_control_cluster5)
-# kWithin_treat30 <- softConnectivity(datExpr_treat30_cluster5)
-# names(kWithin_treat30) <- colnames(datExpr_treat30_cluster5)
-# kWithin_treat35 <- softConnectivity(datExpr_treat35_cluster5)
-# names(kWithin_treat35) <- colnames(datExpr_treat35_cluster5)
+# kWithin_control <- softConnectivity(datExpr_control_cluster1)
+# names(kWithin_control) <- colnames(datExpr_control_cluster1)
+# kWithin_treat30 <- softConnectivity(datExpr_treat30_cluster1)
+# names(kWithin_treat30) <- colnames(datExpr_treat30_cluster1)
+# kWithin_treat35 <- softConnectivity(datExpr_treat35_cluster1)
+# names(kWithin_treat35) <- colnames(datExpr_treat35_cluster1)
 
-# Number of top 10% hub genes for each group
-#select the top 10% hub genes in each module based on intramodular connectivity (common threshold)
-#Top 10% connectivity → ~100 hubs per 1000-gene module
-# Use sum of absolute correlations as a proxy for connectivity (ranks genes by their overall co-expression with all other genes in the module)
-
+# Use sum of absolute correlations as a proxy for connectivity
 # For control group
 # Remove genes with zero variance
-var_genes <- apply(datExpr_control_cluster5, 2, function(x) var(x, na.rm = TRUE) > 0)
-datExpr_control_cluster5_filt <- datExpr_control_cluster5[, var_genes]
+var_genes <- apply(datExpr_control_cluster1, 2, function(x) var(x, na.rm = TRUE) > 0)
+datExpr_control_cluster1_filt <- datExpr_control_cluster1[, var_genes]
 
-cor_mat_control <- cor(datExpr_control_cluster5_filt, method = "pearson", use = "pairwise.complete.obs")
+cor_mat_control <- cor(datExpr_control_cluster1_filt, method = "pearson", use = "pairwise.complete.obs")
 diag(cor_mat_control) <- 0
 hub_score_control <- rowSums(abs(cor_mat_control), na.rm = TRUE)
-names(hub_score_control) <- colnames(datExpr_control_cluster5_filt)
+names(hub_score_control) <- colnames(datExpr_control_cluster1_filt)
 top10pct_hubs_control <- names(sort(hub_score_control, decreasing = TRUE))[1:ceiling(0.10 * length(hub_score_control))]
-top10pct_hubs_control_5 <- names(sort(hub_score_control, decreasing = TRUE))[1:ceiling(0.10 * length(hub_score_control))]
+top10pct_hubs_control_1 <- names(sort(hub_score_control, decreasing = TRUE))[1:ceiling(0.10 * length(hub_score_control))]
 
 # For treat30 group
 # Remove genes with zero variance
-var_genes <- apply(datExpr_treat30_cluster5, 2, function(x) var(x, na.rm = TRUE) > 0)
-datExpr_treat30_cluster5_filt <- datExpr_treat30_cluster5[, var_genes]
+var_genes <- apply(datExpr_treat30_cluster1, 2, function(x) var(x, na.rm = TRUE) > 0)
+datExpr_treat30_cluster1_filt <- datExpr_treat30_cluster1[, var_genes]
 
-cor_mat_treat30 <- cor(datExpr_treat30_cluster5, method = "pearson", use = "pairwise.complete.obs")
+cor_mat_treat30 <- cor(datExpr_treat30_cluster1, method = "pearson", use = "pairwise.complete.obs")
 diag(cor_mat_treat30) <- 0
 hub_score_treat30 <- rowSums(abs(cor_mat_treat30), na.rm = TRUE)
-names(hub_score_treat30) <- colnames(datExpr_treat30_cluster5)
+names(hub_score_treat30) <- colnames(datExpr_treat30_cluster1)
 top10pct_hubs_treat30 <- names(sort(hub_score_treat30, decreasing = TRUE))[1:ceiling(0.10 * length(hub_score_treat30))]
-top10pct_hubs_treat30_5 <- names(sort(hub_score_treat30, decreasing = TRUE))[1:ceiling(0.10 * length(hub_score_treat30))]
+top10pct_hubs_treat30_1 <- names(sort(hub_score_treat30, decreasing = TRUE))[1:ceiling(0.10 * length(hub_score_treat30))]
 
 # For treat35 group 
 # Remove genes with zero variance
-var_genes <- apply(datExpr_treat35_cluster5, 2, function(x) var(x, na.rm = TRUE) > 0)
-datExpr_treat35_cluster5_filt <- datExpr_treat35_cluster5[, var_genes]
+var_genes <- apply(datExpr_treat35_cluster1, 2, function(x) var(x, na.rm = TRUE) > 0)
+datExpr_treat35_cluster1_filt <- datExpr_treat35_cluster1[, var_genes]
 
-cor_mat_treat35 <- cor(datExpr_treat35_cluster5, method = "pearson", use = "pairwise.complete.obs")
+cor_mat_treat35 <- cor(datExpr_treat35_cluster1, method = "pearson", use = "pairwise.complete.obs")
 diag(cor_mat_treat35) <- 0
 hub_score_treat35 <- rowSums(abs(cor_mat_treat35), na.rm = TRUE)
-names(hub_score_treat35) <- colnames(datExpr_treat35_cluster5)
+names(hub_score_treat35) <- colnames(datExpr_treat35_cluster1)
 top10pct_hubs_treat35 <- names(sort(hub_score_treat35, decreasing = TRUE))[1:ceiling(0.10 * length(hub_score_treat35))]
-top10pct_hubs_treat35_5 <- names(sort(hub_score_treat35, decreasing = TRUE))[1:ceiling(0.10 * length(hub_score_treat35))]
+top10pct_hubs_treat35_1 <- names(sort(hub_score_treat35, decreasing = TRUE))[1:ceiling(0.10 * length(hub_score_treat35))]
 
 # Save the top 10% hub genes as CSV files
 write.csv(data.frame(Gene = top10pct_hubs_control),
-          file = "top10pct_hub_genes_control_cluster5_2.csv", row.names = FALSE)
+          file = "top10pct_hub_genes_control_cluster1.csv", row.names = FALSE)
 write.csv(data.frame(Gene = top10pct_hubs_treat30),
-          file = "top10pct_hub_genes_treat30_cluster5_2.csv", row.names = FALSE)
+          file = "top10pct_hub_genes_treat30_cluster1.csv", row.names = FALSE)
 write.csv(data.frame(Gene = top10pct_hubs_treat35),
-          file = "top10pct_hub_genes_treat35_cluster5_2.csv", row.names = FALSE)
-
+          file = "top10pct_hub_genes_treat35_cluster1.csv", row.names = FALSE)
 
 #### Identify the top Hub Gene per cluster and temp
 
@@ -1194,59 +1327,12 @@ top10pct_hubs_treat35 <- names(sort(hub_score_treat35, decreasing = TRUE))[1:cei
 top_hub_treat35 <- top10pct_hubs_treat35[which.max(hub_score_treat35[top10pct_hubs_treat35])]
 
 cat("Top hub gene (control, top 10%):", top_hub_control, "\n")
-#Montipora_capitata_HIv3___RNAseq.g26531.t1 
+#Porites_compressa_HIv1___TS.g30032.t1 
 cat("Top hub gene (treat30, top 10%):", top_hub_treat30, "\n")
-#Montipora_capitata_HIv3___RNAseq.g20492.t1 
+#Porites_compressa_HIv1___RNAseq.33470_t 
 cat("Top hub gene (treat35, top 10%):", top_hub_treat35, "\n")
-#Montipora_capitata_HIv3___RNAseq.g3459.t1 
+#Porites_compressa_HIv1___RNAseq.g5672.t1 
 
-# ####### Compare module preservation across conditions 
-# ####### Highlight Nodes That Change Hub Status
-# # Highlight Top 10% Hubs
-# # Hub changing status between control and temps at break-points per (30 and 35) for all clusters
-
-# library(dplyr)
-# library(tidyr)
-# library(ggplot2)
-# library(igraph)
-
-# # Select only the top 10 hub genes for each condition (less computationally heavy for plotting)
-# top10_genes_control <- top10pct_hubs_control[1:10]
-# top10_genes_treat30 <- top10pct_hubs_treat30[1:10]
-# top10_genes_treat35 <- top10pct_hubs_treat35[1:10]
-
-# # Subset expression data to these genes
-# datExpr_control_top10 <- datExpr_control_cluster5[, top10_genes_control, drop = FALSE]
-# datExpr_treat30_top10 <- datExpr_treat30_cluster5[, top10_genes_treat30, drop = FALSE]
-# datExpr_treat35_top10 <- datExpr_treat35_cluster5[, top10_genes_treat35, drop = FALSE]
-
-# # Build adjacency/correlation matrices
-# adj_control_top10 <- abs(cor(datExpr_control_top10, method = "pearson"))
-# adj_treat30_top10 <- abs(cor(datExpr_treat30_top10, method = "pearson"))
-# adj_treat35_top10 <- abs(cor(datExpr_treat35_top10, method = "pearson"))
-
-# # Create igraph objects
-# g_control_top10 <- graph_from_adjacency_matrix(adj_control_top10, mode = "undirected", weighted = TRUE, diag = FALSE)
-# g_treat30_top10 <- graph_from_adjacency_matrix(adj_treat30_top10, mode = "undirected", weighted = TRUE, diag = FALSE)
-# g_treat35_top10 <- graph_from_adjacency_matrix(adj_treat35_top10, mode = "undirected", weighted = TRUE, diag = FALSE)
-
-# # Highlight the top hub gene (by kWithin) in red, others in gray
-# V(g_control_top10)$color <- ifelse(names(V(g_control_top10)) == top_hub_control, "red", "gray")
-# V(g_treat30_top10)$color <- ifelse(names(V(g_treat30_top10)) == top_hub_treat30, "red", "gray")
-# V(g_treat35_top10)$color <- ifelse(names(V(g_treat35_top10)) == top_hub_treat35, "red", "gray")
-
-# V(g_control_top10)$label <- ifelse(names(V(g_control_top10)) == top_hub_control, top_hub_control, "")
-# V(g_treat30_top10)$label <- ifelse(names(V(g_treat30_top10)) == top_hub_treat30, top_hub_treat30, "")
-# V(g_treat35_top10)$label <- ifelse(names(V(g_treat35_top10)) == top_hub_treat35, top_hub_treat35, "")
-
-# # Plot networks
-# pdf("network_top10genes_cluster5.pdf", width = 12, height = 8)
-# par(mfrow = c(1, 3))
-# plot(g_control_top10, main = "Control: Top 10 Hubs", vertex.label = V(g_control_top10)$label, vertex.size = 8)
-# plot(g_treat30_top10, main = "Treat30: Top 10 Hubs", vertex.label = V(g_treat30_top10)$label, vertex.size = 8)
-# plot(g_treat35_top10, main = "Treat35: Top 10 Hubs", vertex.label = V(g_treat35_top10)$label, vertex.size = 8)
-# par(mfrow = c(1, 1))
-# dev.off()
 
 #### Using the ggalluvial package to visualize the overlap of the top 10% hub genes in selected clusters for control, treat30, and 
 #### treat35.
@@ -1255,7 +1341,7 @@ library(ggalluvial)
 library(dplyr)
 
 # All genes in cluster 5
-all_genes <- cluster5_genes
+all_genes <- cluster1_genes
 
 # Build membership matrix
 membership <- data.frame(
@@ -1273,7 +1359,7 @@ membership <- membership %>%
 membership_summary <- membership %>%
   group_by(Control, Treat30, Treat35) %>%
   summarise(Freq = n(), .groups = "drop") %>%
-  mutate(Cluster = "Cluster 5 Genes")
+  mutate(Cluster = "Cluster 1 Genes")
 
 # Create a label for each interaction pattern
 membership_summary$pattern <- interaction(membership_summary$Control, membership_summary$Treat30, membership_summary$Treat35)
@@ -1281,7 +1367,7 @@ pattern_counts <- setNames(membership_summary$Freq, membership_summary$pattern)
 pattern_labels <- paste0(names(pattern_counts), " (n=", pattern_counts, ")")
 names(pattern_labels) <- names(pattern_counts)
 
-# Plot as before
+# Plot 
 ggplot(membership_summary,
        aes(axis1 = Cluster,
            axis2 = factor(Control, levels = c(0, 1), labels = c("Not Hub", "Hub")),
@@ -1292,7 +1378,7 @@ ggplot(membership_summary,
   geom_stratum(width = 1/6, fill = "grey80", color = "black") +
   geom_text(stat = "stratum", aes(label = after_stat(stratum)), size = 4) +
   scale_x_discrete(limits = c("Cluster", "Control", "Treat30", "Treat35"),
-                   labels = c("Cluster" = "Cluster 5 Genes",
+                   labels = c("Cluster" = "Cluster 1 Genes",
                               "Control" = "Control",
                               "Treat30" = "Treat30",
                               "Treat35" = "Treat35")) +
@@ -1302,10 +1388,11 @@ ggplot(membership_summary,
     labels = pattern_labels
   ) +
   theme_minimal() +
-  labs(title = "Cluster 5: Overlap of Top 10% Hub Genes Across Conditions",
+  labs(title = "Cluster 1: Overlap of Top 10% Hub Genes Across Conditions",
        y = "Number of Genes", x = "") +
   theme(axis.text.y = element_blank(),
         axis.ticks.y = element_blank())
+
 
 ## bar plot
 library(dplyr)
@@ -1331,7 +1418,7 @@ membership_summary$pattern <- factor(
 # Assign colors (same as alluvial)
 bar_colors <- setNames(RColorBrewer::brewer.pal(length(pattern_labels), "Set2"), names(pattern_labels))
 
-bar5 <- ggplot(membership_summary, aes(x = "Cluster 5", y = Percent, fill = pattern)) +
+bar1 <- ggplot(membership_summary, aes(x = "Cluster 1", y = Percent, fill = pattern)) +
   geom_bar(stat = "identity", width = 0.1, color = "black") +
   scale_fill_manual(
     name = "Hub Pattern\n(Control.Treat30.Treat35)",
@@ -1339,7 +1426,7 @@ bar5 <- ggplot(membership_summary, aes(x = "Cluster 5", y = Percent, fill = patt
     labels = pattern_labels
   ) +
   labs(
-    title = "Cluster 5: Distribution of Hub Gene Overlap Patterns",
+    title = "Cluster 1: Distribution of Hub Gene Overlap Patterns",
     x = "",
     y = "Percent of Unique Hub Genes"
   ) +
@@ -1350,74 +1437,71 @@ bar5 <- ggplot(membership_summary, aes(x = "Cluster 5", y = Percent, fill = patt
   )
 
 
-#### Export the network of a specific cluster - cluster6
-cluster6_modules <- c("lightgreen", "sienna3")  # replace with your actual module colors for cluster6
-inCluster6 <- moduleColors %in% cluster6_modules #Select genes belonging to these modules
-cluster6_genes <- colnames(datExpr)[inCluster6] ##640
+
+#### Export the network of a specific cluster - cluster2
+cluster2_modules <- c("black", "pink", "lightgreen", "mediumpurple3", "darkturquoise", "yellow4")  # replace with your actual module colors for cluster2
+inCluster <- moduleColors %in% cluster2_modules
+cluster2_genes <- probes[inCluster] ##3561
 
 # Subset expression data for each group
-datExpr_control_cluster6 <- datExpr[control_samples, cluster6_genes]
-datExpr_treat30_cluster6 <- datExpr[treat30_samples, cluster6_genes]
-datExpr_treat35_cluster6 <- datExpr[treat35_samples, cluster6_genes]
+datExpr_control_cluster2 <- datExpr[control_samples, cluster2_genes ]
+datExpr_treat30_cluster2 <- datExpr[treat30_samples, cluster2_genes ]
+datExpr_treat35_cluster2 <- datExpr[treat35_samples, cluster2_genes ]
 
-# # Calculate intramodular connectivity for for all genes in a cluster/module using only the genes in that module and only the samples for each condition
-# # kWithin: sum of connection strengths with other module genes
-# #add genes names to connectivity vectors
-# kWithin_control <- softConnectivity(datExpr_control_cluster6)
-# names(kWithin_control) <- colnames(datExpr_control_cluster6)
-# kWithin_treat30 <- softConnectivity(datExpr_treat30_cluster6)
-# names(kWithin_treat30) <- colnames(datExpr_treat30_cluster6)
-# kWithin_treat35 <- softConnectivity(datExpr_treat35_cluster6)
-# names(kWithin_treat35) <- colnames(datExpr_treat35_cluster6)
+# Calculate intramodular connectivity for for all genes in a cluster/module using only the genes in that module and only the samples for each condition
+# kWithin: sum of connection strengths with other module genes
+#add genes names to connectivity vectors
+# kWithin_control <- softConnectivity(datExpr_control_cluster1)
+# names(kWithin_control) <- colnames(datExpr_control_cluster1)
+# kWithin_treat30 <- softConnectivity(datExpr_treat30_cluster1)
+# names(kWithin_treat30) <- colnames(datExpr_treat30_cluster1)
+# kWithin_treat35 <- softConnectivity(datExpr_treat35_cluster1)
+# names(kWithin_treat35) <- colnames(datExpr_treat35_cluster1)
 
-# Number of top 10% hub genes for each group
-#select the top 10% hub genes in each module based on intramodular connectivity (common threshold)
-#Top 10% connectivity → ~100 hubs per 1000-gene module
-# Use sum of absolute correlations as a proxy for connectivity (ranks genes by their overall co-expression with all other genes in the module)
-
+# Use sum of absolute correlations as a proxy for connectivity
 # For control group
 # Remove genes with zero variance
-var_genes <- apply(datExpr_control_cluster6, 2, function(x) var(x, na.rm = TRUE) > 0)
-datExpr_control_cluster6_filt <- datExpr_control_cluster6[, var_genes]
+var_genes <- apply(datExpr_control_cluster2, 2, function(x) var(x, na.rm = TRUE) > 0)
+datExpr_control_cluster2_filt <- datExpr_control_cluster2[, var_genes]
 
-cor_mat_control <- cor(datExpr_control_cluster6_filt, method = "pearson", use = "pairwise.complete.obs")
+cor_mat_control <- cor(datExpr_control_cluster2_filt, method = "pearson", use = "pairwise.complete.obs")
 diag(cor_mat_control) <- 0
 hub_score_control <- rowSums(abs(cor_mat_control), na.rm = TRUE)
-names(hub_score_control) <- colnames(datExpr_control_cluster6_filt)
+names(hub_score_control) <- colnames(datExpr_control_cluster2_filt)
 top10pct_hubs_control <- names(sort(hub_score_control, decreasing = TRUE))[1:ceiling(0.10 * length(hub_score_control))]
-top10pct_hubs_control_6 <- names(sort(hub_score_control, decreasing = TRUE))[1:ceiling(0.10 * length(hub_score_control))]
+top10pct_hubs_control_2 <- names(sort(hub_score_control, decreasing = TRUE))[1:ceiling(0.10 * length(hub_score_control))]
 
 # For treat30 group
 # Remove genes with zero variance
-var_genes <- apply(datExpr_treat30_cluster6, 2, function(x) var(x, na.rm = TRUE) > 0)
-datExpr_treat30_cluster6_filt <- datExpr_treat30_cluster6[, var_genes]
+var_genes <- apply(datExpr_treat30_cluster2, 2, function(x) var(x, na.rm = TRUE) > 0)
+datExpr_treat30_cluster2_filt <- datExpr_treat30_cluster2[, var_genes]
 
-cor_mat_treat30 <- cor(datExpr_treat30_cluster6, method = "pearson", use = "pairwise.complete.obs")
+cor_mat_treat30 <- cor(datExpr_treat30_cluster2, method = "pearson", use = "pairwise.complete.obs")
 diag(cor_mat_treat30) <- 0
 hub_score_treat30 <- rowSums(abs(cor_mat_treat30), na.rm = TRUE)
-names(hub_score_treat30) <- colnames(datExpr_treat30_cluster6)
+names(hub_score_treat30) <- colnames(datExpr_treat30_cluster2)
 top10pct_hubs_treat30 <- names(sort(hub_score_treat30, decreasing = TRUE))[1:ceiling(0.10 * length(hub_score_treat30))]
-top10pct_hubs_treat30_6 <- names(sort(hub_score_treat30, decreasing = TRUE))[1:ceiling(0.10 * length(hub_score_treat30))]
+top10pct_hubs_treat30_2 <- names(sort(hub_score_treat30, decreasing = TRUE))[1:ceiling(0.10 * length(hub_score_treat30))]
 
 # For treat35 group 
 # Remove genes with zero variance
-var_genes <- apply(datExpr_treat35_cluster6, 2, function(x) var(x, na.rm = TRUE) > 0)
-datExpr_treat35_cluster6_filt <- datExpr_treat35_cluster6[, var_genes]
+var_genes <- apply(datExpr_treat35_cluster2, 2, function(x) var(x, na.rm = TRUE) > 0)
+datExpr_treat35_cluster2_filt <- datExpr_treat35_cluster2[, var_genes]
 
-cor_mat_treat35 <- cor(datExpr_treat35_cluster6, method = "pearson", use = "pairwise.complete.obs")
+cor_mat_treat35 <- cor(datExpr_treat35_cluster2, method = "pearson", use = "pairwise.complete.obs")
 diag(cor_mat_treat35) <- 0
 hub_score_treat35 <- rowSums(abs(cor_mat_treat35), na.rm = TRUE)
-names(hub_score_treat35) <- colnames(datExpr_treat35_cluster6)
+names(hub_score_treat35) <- colnames(datExpr_treat35_cluster2)
 top10pct_hubs_treat35 <- names(sort(hub_score_treat35, decreasing = TRUE))[1:ceiling(0.10 * length(hub_score_treat35))]
-top10pct_hubs_treat35_6 <- names(sort(hub_score_treat35, decreasing = TRUE))[1:ceiling(0.10 * length(hub_score_treat35))]
+top10pct_hubs_treat35_2 <- names(sort(hub_score_treat35, decreasing = TRUE))[1:ceiling(0.10 * length(hub_score_treat35))]
 
 # Save the top 10% hub genes as CSV files
 write.csv(data.frame(Gene = top10pct_hubs_control),
-          file = "top10pct_hub_genes_control_cluster6_2.csv", row.names = FALSE)
+          file = "top10pct_hub_genes_control_cluster2.csv", row.names = FALSE)
 write.csv(data.frame(Gene = top10pct_hubs_treat30),
-          file = "top10pct_hub_genes_treat30_cluster6_2.csv", row.names = FALSE)
+          file = "top10pct_hub_genes_treat30_cluster2.csv", row.names = FALSE)
 write.csv(data.frame(Gene = top10pct_hubs_treat35),
-          file = "top10pct_hub_genes_treat35_cluster6_2.csv", row.names = FALSE)
+          file = "top10pct_hub_genes_treat35_cluster2.csv", row.names = FALSE)
 
 
 #### Identify the top Hub Gene per cluster and temp
@@ -1436,59 +1520,12 @@ top10pct_hubs_treat35 <- names(sort(hub_score_treat35, decreasing = TRUE))[1:cei
 top_hub_treat35 <- top10pct_hubs_treat35[which.max(hub_score_treat35[top10pct_hubs_treat35])]
 
 cat("Top hub gene (control, top 10%):", top_hub_control, "\n")
-#Montipora_capitata_HIv3___RNAseq.g454.t1
+#Porites_compressa_HIv1___RNAseq.g9915.t1  
 cat("Top hub gene (treat30, top 10%):", top_hub_treat30, "\n")
-#Montipora_capitata_HIv3___TS.g9235.t1  
+#Porites_compressa_HIv1___TS.g25224.t1 
 cat("Top hub gene (treat35, top 10%):", top_hub_treat35, "\n")
-# Montipora_capitata_HIv3___TS.g46337.t1 
+#Porites_compressa_HIv1___RNAseq.g40300.t1
 
-####### Compare module preservation across conditions 
-####### Highlight Nodes That Change Hub Status
-# Highlight Top 10% Hubs
-# Hub changing status between control and temps at break-points per (30 and 35) for all clusters
-
-library(dplyr)
-library(tidyr)
-library(ggplot2)
-library(igraph)
-
-# Select only the top 10 hub genes for each condition (less computationally heavy for plotting)
-# top10_genes_control <- top10pct_hubs_control[1:10]
-# top10_genes_treat30 <- top10pct_hubs_treat30[1:10]
-# top10_genes_treat35 <- top10pct_hubs_treat35[1:10]
-
-# # Subset expression data to these genes
-# datExpr_control_top10 <- datExpr_control_cluster6[, top10_genes_control, drop = FALSE]
-# datExpr_treat30_top10 <- datExpr_treat30_cluster6[, top10_genes_treat30, drop = FALSE]
-# datExpr_treat35_top10 <- datExpr_treat35_cluster6[, top10_genes_treat35, drop = FALSE]
-
-# # Build adjacency/correlation matrices
-# adj_control_top10 <- abs(cor(datExpr_control_top10, method = "pearson"))
-# adj_treat30_top10 <- abs(cor(datExpr_treat30_top10, method = "pearson"))
-# adj_treat35_top10 <- abs(cor(datExpr_treat35_top10, method = "pearson"))
-
-# # Create igraph objects
-# g_control_top10 <- graph_from_adjacency_matrix(adj_control_top10, mode = "undirected", weighted = TRUE, diag = FALSE)
-# g_treat30_top10 <- graph_from_adjacency_matrix(adj_treat30_top10, mode = "undirected", weighted = TRUE, diag = FALSE)
-# g_treat35_top10 <- graph_from_adjacency_matrix(adj_treat35_top10, mode = "undirected", weighted = TRUE, diag = FALSE)
-
-# # Highlight the top hub gene (by kWithin) in red, others in gray
-# V(g_control_top10)$color <- ifelse(names(V(g_control_top10)) == top_hub_control, "red", "gray")
-# V(g_treat30_top10)$color <- ifelse(names(V(g_treat30_top10)) == top_hub_treat30, "red", "gray")
-# V(g_treat35_top10)$color <- ifelse(names(V(g_treat35_top10)) == top_hub_treat35, "red", "gray")
-
-# V(g_control_top10)$label <- ifelse(names(V(g_control_top10)) == top_hub_control, top_hub_control, "")
-# V(g_treat30_top10)$label <- ifelse(names(V(g_treat30_top10)) == top_hub_treat30, top_hub_treat30, "")
-# V(g_treat35_top10)$label <- ifelse(names(V(g_treat35_top10)) == top_hub_treat35, top_hub_treat35, "")
-
-# # Plot networks
-# pdf("network_top10genes_cluster6.pdf", width = 12, height = 8)
-# par(mfrow = c(1, 3))
-# plot(g_control_top10, main = "Control: Top 10 Hubs", vertex.label = V(g_control_top10)$label, vertex.size = 8)
-# plot(g_treat30_top10, main = "Treat30: Top 10 Hubs", vertex.label = V(g_treat30_top10)$label, vertex.size = 8)
-# plot(g_treat35_top10, main = "Treat35: Top 10 Hubs", vertex.label = V(g_treat35_top10)$label, vertex.size = 8)
-# par(mfrow = c(1, 1))
-# dev.off()
 
 #### Using the ggalluvial package to visualize the overlap of the top 10% hub genes in selected clusters for control, treat30, and 
 #### treat35.
@@ -1496,8 +1533,8 @@ library(igraph)
 library(ggalluvial)
 library(dplyr)
 
-# All genes in cluster 6
-all_genes <- cluster6_genes
+# All genes in cluster 5
+all_genes <- cluster2_genes
 
 # Build membership matrix
 membership <- data.frame(
@@ -1515,7 +1552,7 @@ membership <- membership %>%
 membership_summary <- membership %>%
   group_by(Control, Treat30, Treat35) %>%
   summarise(Freq = n(), .groups = "drop") %>%
-  mutate(Cluster = "Cluster 6 Genes")
+  mutate(Cluster = "Cluster 2 Genes")
 
 # Create a label for each interaction pattern
 membership_summary$pattern <- interaction(membership_summary$Control, membership_summary$Treat30, membership_summary$Treat35)
@@ -1523,7 +1560,7 @@ pattern_counts <- setNames(membership_summary$Freq, membership_summary$pattern)
 pattern_labels <- paste0(names(pattern_counts), " (n=", pattern_counts, ")")
 names(pattern_labels) <- names(pattern_counts)
 
-# Plot as before
+# Plot 
 ggplot(membership_summary,
        aes(axis1 = Cluster,
            axis2 = factor(Control, levels = c(0, 1), labels = c("Not Hub", "Hub")),
@@ -1534,7 +1571,7 @@ ggplot(membership_summary,
   geom_stratum(width = 1/6, fill = "grey80", color = "black") +
   geom_text(stat = "stratum", aes(label = after_stat(stratum)), size = 4) +
   scale_x_discrete(limits = c("Cluster", "Control", "Treat30", "Treat35"),
-                   labels = c("Cluster" = "Cluster 6 Genes",
+                   labels = c("Cluster" = "Cluster 2 Genes",
                               "Control" = "Control",
                               "Treat30" = "Treat30",
                               "Treat35" = "Treat35")) +
@@ -1544,10 +1581,11 @@ ggplot(membership_summary,
     labels = pattern_labels
   ) +
   theme_minimal() +
-  labs(title = "Cluster 6: Overlap of Top 10% Hub Genes Across Conditions",
+  labs(title = "Cluster 21: Overlap of Top 10% Hub Genes Across Conditions",
        y = "Number of Genes", x = "") +
   theme(axis.text.y = element_blank(),
         axis.ticks.y = element_blank())
+
 
 ## bar plot
 library(dplyr)
@@ -1555,6 +1593,7 @@ library(ggplot2)
 library(RColorBrewer)
 
 # Assume membership_summary and pattern_labels are already created as in your alluvial plot code
+
 # Calculate total number of unique hub genes across all conditions
 unique_hubs <- unique(c(top10pct_hubs_control, top10pct_hubs_treat30, top10pct_hubs_treat35))
 total_hubs <- length(unique_hubs)
@@ -1572,7 +1611,7 @@ membership_summary$pattern <- factor(
 # Assign colors (same as alluvial)
 bar_colors <- setNames(RColorBrewer::brewer.pal(length(pattern_labels), "Set2"), names(pattern_labels))
 
-bar6 <- ggplot(membership_summary, aes(x = "Cluster 6", y = Percent, fill = pattern)) +
+bar2 <- ggplot(membership_summary, aes(x = "Cluster 2", y = Percent, fill = pattern)) +
   geom_bar(stat = "identity", width = 0.1, color = "black") +
   scale_fill_manual(
     name = "Hub Pattern\n(Control.Treat30.Treat35)",
@@ -1580,7 +1619,7 @@ bar6 <- ggplot(membership_summary, aes(x = "Cluster 6", y = Percent, fill = patt
     labels = pattern_labels
   ) +
   labs(
-    title = "Cluster 6: Distribution of Hub Gene Overlap Patterns",
+    title = "Cluster 2: Distribution of Hub Gene Overlap Patterns",
     x = "",
     y = "Percent of Unique Hub Genes"
   ) +
@@ -1591,74 +1630,73 @@ bar6 <- ggplot(membership_summary, aes(x = "Cluster 6", y = Percent, fill = patt
   )
 
 
-#### Export the network of a specific cluster - cluster8
-cluster8_modules <- c("turquoise")  # replace with your actual module colors for cluster8
-inCluster8 <- moduleColors %in% cluster8_modules #Select genes belonging to these modules
-cluster8_genes <- colnames(datExpr)[inCluster8] ##6303
+
+#### Export the network of a specific cluster - cluster3
+cluster3_modules <- c("skyblue2", "floralwhite", "coral1", "cyan", "blue", "grey60", "paleturquoise")  # replace with your actual module colors for cluster3
+inCluster <- moduleColors %in% cluster3_modules
+cluster3_genes <- probes[inCluster] ##6935
 
 # Subset expression data for each group
-datExpr_control_cluster8 <- datExpr[control_samples, cluster8_genes]
-datExpr_treat30_cluster8 <- datExpr[treat30_samples, cluster8_genes]
-datExpr_treat35_cluster8 <- datExpr[treat35_samples, cluster8_genes]
+datExpr_control_cluster3 <- datExpr[control_samples, cluster3_genes ]
+datExpr_treat30_cluster3 <- datExpr[treat30_samples, cluster3_genes ]
+datExpr_treat35_cluster3 <- datExpr[treat35_samples, cluster3_genes ]
 
-# # Calculate intramodular connectivity for for all genes in a cluster/module using only the genes in that module and only the samples for each condition
-# # kWithin: sum of connection strengths with other module genes
-# #add genes names to connectivity vectors
-# kWithin_control <- softConnectivity(datExpr_control_cluster8)
-# names(kWithin_control) <- colnames(datExpr_control_cluster8)
-# kWithin_treat30 <- softConnectivity(datExpr_treat30_cluster8)
-# names(kWithin_treat30) <- colnames(datExpr_treat30_cluster8)
-# kWithin_treat35 <- softConnectivity(datExpr_treat35_cluster8)
-# names(kWithin_treat35) <- colnames(datExpr_treat35_cluster8)
+# Calculate intramodular connectivity for for all genes in a cluster/module using only the genes in that module and only the samples for each condition
+# kWithin: sum of connection strengths with other module genes
+#add genes names to connectivity vectors
+# kWithin_control <- softConnectivity(datExpr_control_cluster3)
+# names(kWithin_control) <- colnames(datExpr_control_cluster3)
+# kWithin_treat30 <- softConnectivity(datExpr_treat30_cluster3)
+# names(kWithin_treat30) <- colnames(datExpr_treat30_cluster3)
+# kWithin_treat35 <- softConnectivity(datExpr_treat35_cluster3)
+# names(kWithin_treat35) <- colnames(datExpr_treat35_cluster3)
 
-# Number of top 10% hub genes for each group
-#select the top 10% hub genes in each module based on intramodular connectivity (common threshold)
-#Top 10% connectivity → ~100 hubs per 1000-gene module
-# Use sum of absolute correlations as a proxy for connectivity (ranks genes by their overall co-expression with all other genes in the module)
-
+# Use sum of absolute correlations as a proxy for connectivity
 # For control group
 # Remove genes with zero variance
-var_genes <- apply(datExpr_control_cluster8, 2, function(x) var(x, na.rm = TRUE) > 0)
-datExpr_control_cluster8_filt <- datExpr_control_cluster8[, var_genes]
+var_genes <- apply(datExpr_control_cluster3, 2, function(x) var(x, na.rm = TRUE) > 0)
+datExpr_control_cluster3_filt <- datExpr_control_cluster3[, var_genes]
 
-cor_mat_control <- cor(datExpr_control_cluster8_filt, method = "pearson", use = "pairwise.complete.obs")
+cor_mat_control <- cor(datExpr_control_cluster3_filt, method = "pearson", use = "pairwise.complete.obs")
 diag(cor_mat_control) <- 0
 hub_score_control <- rowSums(abs(cor_mat_control), na.rm = TRUE)
-names(hub_score_control) <- colnames(datExpr_control_cluster8_filt)
+names(hub_score_control) <- colnames(datExpr_control_cluster3_filt)
 top10pct_hubs_control <- names(sort(hub_score_control, decreasing = TRUE))[1:ceiling(0.10 * length(hub_score_control))]
-top10pct_hubs_control_8 <- names(sort(hub_score_control, decreasing = TRUE))[1:ceiling(0.10 * length(hub_score_control))]
+top10pct_hubs_control_3 <- names(sort(hub_score_control, decreasing = TRUE))[1:ceiling(0.10 * length(hub_score_control))]
 
 # For treat30 group
 # Remove genes with zero variance
-var_genes <- apply(datExpr_treat30_cluster8, 2, function(x) var(x, na.rm = TRUE) > 0)
-datExpr_treat30_cluster8_filt <- datExpr_treat30_cluster8[, var_genes]
+var_genes <- apply(datExpr_treat30_cluster3, 2, function(x) var(x, na.rm = TRUE) > 0)
+datExpr_treat30_cluster3_filt <- datExpr_treat30_cluster3[, var_genes]
 
-cor_mat_treat30 <- cor(datExpr_treat30_cluster8, method = "pearson", use = "pairwise.complete.obs")
+cor_mat_treat30 <- cor(datExpr_treat30_cluster3, method = "pearson", use = "pairwise.complete.obs")
 diag(cor_mat_treat30) <- 0
 hub_score_treat30 <- rowSums(abs(cor_mat_treat30), na.rm = TRUE)
-names(hub_score_treat30) <- colnames(datExpr_treat30_cluster8)
+names(hub_score_treat30) <- colnames(datExpr_treat30_cluster3)
 top10pct_hubs_treat30 <- names(sort(hub_score_treat30, decreasing = TRUE))[1:ceiling(0.10 * length(hub_score_treat30))]
-top10pct_hubs_treat30_8 <- names(sort(hub_score_treat30, decreasing = TRUE))[1:ceiling(0.10 * length(hub_score_treat30))]
+top10pct_hubs_treat30_3 <- names(sort(hub_score_treat30, decreasing = TRUE))[1:ceiling(0.10 * length(hub_score_treat30))]
 
 # For treat35 group 
 # Remove genes with zero variance
-var_genes <- apply(datExpr_treat35_cluster8, 2, function(x) var(x, na.rm = TRUE) > 0)
-datExpr_treat35_cluster8_filt <- datExpr_treat35_cluster8[, var_genes]
+var_genes <- apply(datExpr_treat35_cluster3, 2, function(x) var(x, na.rm = TRUE) > 0)
+datExpr_treat35_cluster3_filt <- datExpr_treat35_cluster3[, var_genes]
 
-cor_mat_treat35 <- cor(datExpr_treat35_cluster8, method = "pearson", use = "pairwise.complete.obs")
+cor_mat_treat35 <- cor(datExpr_treat35_cluster3, method = "pearson", use = "pairwise.complete.obs")
 diag(cor_mat_treat35) <- 0
 hub_score_treat35 <- rowSums(abs(cor_mat_treat35), na.rm = TRUE)
-names(hub_score_treat35) <- colnames(datExpr_treat35_cluster8)
+names(hub_score_treat35) <- colnames(datExpr_treat35_cluster3)
 top10pct_hubs_treat35 <- names(sort(hub_score_treat35, decreasing = TRUE))[1:ceiling(0.10 * length(hub_score_treat35))]
-top10pct_hubs_treat35_8 <- names(sort(hub_score_treat35, decreasing = TRUE))[1:ceiling(0.10 * length(hub_score_treat35))]
+top10pct_hubs_treat35_3 <- names(sort(hub_score_treat35, decreasing = TRUE))[1:ceiling(0.10 * length(hub_score_treat35))]
 
 # Save the top 10% hub genes as CSV files
 write.csv(data.frame(Gene = top10pct_hubs_control),
-          file = "top10pct_hub_genes_control_cluster8_2.csv", row.names = FALSE)
+          file = "top10pct_hub_genes_control_cluster3.csv", row.names = FALSE)
 write.csv(data.frame(Gene = top10pct_hubs_treat30),
-          file = "top10pct_hub_genes_treat30_cluster8_2.csv", row.names = FALSE)
+          file = "top10pct_hub_genes_treat30_cluster3.csv", row.names = FALSE)
 write.csv(data.frame(Gene = top10pct_hubs_treat35),
-          file = "top10pct_hub_genes_treat35_cluster8_2.csv", row.names = FALSE)
+          file = "top10pct_hub_genes_treat35_cluster3.csv", row.names = FALSE)
+
+#### Identify the top Hub Gene per cluster and temp
 
 # For control group
 top10pct_hubs_control <- names(sort(hub_score_control, decreasing = TRUE))[1:ceiling(0.10 * length(hub_score_control))]
@@ -1674,59 +1712,12 @@ top10pct_hubs_treat35 <- names(sort(hub_score_treat35, decreasing = TRUE))[1:cei
 top_hub_treat35 <- top10pct_hubs_treat35[which.max(hub_score_treat35[top10pct_hubs_treat35])]
 
 cat("Top hub gene (control, top 10%):", top_hub_control, "\n")
-#Montipora_capitata_HIv3___RNAseq.g6968.t1  
+#Porites_compressa_HIv1___RNAseq.g19695.t1 
 cat("Top hub gene (treat30, top 10%):", top_hub_treat30, "\n")
-#Montipora_capitata_HIv3___RNAseq.g44936.t1 
+#Porites_compressa_HIv1___RNAseq.g3874.t1 
 cat("Top hub gene (treat35, top 10%):", top_hub_treat35, "\n")
-#Montipora_capitata_HIv3___TS.g27549.t3 
+#Porites_compressa_HIv1___TS.g14122.t1 
 
-####### Compare module preservation across conditions 
-####### Highlight Nodes That Change Hub Status
-# Highlight Top 10% Hubs
-# Hub changing status between control and temps at break-points per (30 and 35) for all clusters
-
-# library(dplyr)
-# library(tidyr)
-# library(ggplot2)
-# library(igraph)
-
-# # Select only the top 10 hub genes for each condition (less computationally heavy for plotting)
-# top10_genes_control <- top10pct_hubs_control[1:10]
-# top10_genes_treat30 <- top10pct_hubs_treat30[1:10]
-# top10_genes_treat35 <- top10pct_hubs_treat35[1:10]
-
-# # Subset expression data to these genes
-# datExpr_control_top10 <- datExpr_control_cluster8[, top10_genes_control, drop = FALSE]
-# datExpr_treat30_top10 <- datExpr_treat30_cluster8[, top10_genes_treat30, drop = FALSE]
-# datExpr_treat35_top10 <- datExpr_treat35_cluster8[, top10_genes_treat35, drop = FALSE]
-
-# # Build adjacency/correlation matrices
-# adj_control_top10 <- abs(cor(datExpr_control_top10, method = "pearson"))
-# adj_treat30_top10 <- abs(cor(datExpr_treat30_top10, method = "pearson"))
-# adj_treat35_top10 <- abs(cor(datExpr_treat35_top10, method = "pearson"))
-
-# # Create igraph objects
-# g_control_top10 <- graph_from_adjacency_matrix(adj_control_top10, mode = "undirected", weighted = TRUE, diag = FALSE)
-# g_treat30_top10 <- graph_from_adjacency_matrix(adj_treat30_top10, mode = "undirected", weighted = TRUE, diag = FALSE)
-# g_treat35_top10 <- graph_from_adjacency_matrix(adj_treat35_top10, mode = "undirected", weighted = TRUE, diag = FALSE)
-
-# # Highlight the top hub gene (by kWithin) in red, others in gray
-# V(g_control_top10)$color <- ifelse(names(V(g_control_top10)) == top_hub_control, "red", "gray")
-# V(g_treat30_top10)$color <- ifelse(names(V(g_treat30_top10)) == top_hub_treat30, "red", "gray")
-# V(g_treat35_top10)$color <- ifelse(names(V(g_treat35_top10)) == top_hub_treat35, "red", "gray")
-
-# V(g_control_top10)$label <- ifelse(names(V(g_control_top10)) == top_hub_control, top_hub_control, "")
-# V(g_treat30_top10)$label <- ifelse(names(V(g_treat30_top10)) == top_hub_treat30, top_hub_treat30, "")
-# V(g_treat35_top10)$label <- ifelse(names(V(g_treat35_top10)) == top_hub_treat35, top_hub_treat35, "")
-
-# # Plot networks
-# pdf("network_top10genes_cluster8.pdf", width = 12, height = 8)
-# par(mfrow = c(1, 3))
-# plot(g_control_top10, main = "Control: Top 10 Hubs", vertex.label = V(g_control_top10)$label, vertex.size = 8)
-# plot(g_treat30_top10, main = "Treat30: Top 10 Hubs", vertex.label = V(g_treat30_top10)$label, vertex.size = 8)
-# plot(g_treat35_top10, main = "Treat35: Top 10 Hubs", vertex.label = V(g_treat35_top10)$label, vertex.size = 8)
-# par(mfrow = c(1, 1))
-# dev.off()
 
 #### Using the ggalluvial package to visualize the overlap of the top 10% hub genes in selected clusters for control, treat30, and 
 #### treat35.
@@ -1734,8 +1725,8 @@ cat("Top hub gene (treat35, top 10%):", top_hub_treat35, "\n")
 library(ggalluvial)
 library(dplyr)
 
-# All genes in cluster 8
-all_genes <- cluster8_genes
+# All genes in cluster 5
+all_genes <- cluster3_genes
 
 # Build membership matrix
 membership <- data.frame(
@@ -1753,7 +1744,7 @@ membership <- membership %>%
 membership_summary <- membership %>%
   group_by(Control, Treat30, Treat35) %>%
   summarise(Freq = n(), .groups = "drop") %>%
-  mutate(Cluster = "Cluster 8 Genes")
+  mutate(Cluster = "Cluster 3 Genes")
 
 # Create a label for each interaction pattern
 membership_summary$pattern <- interaction(membership_summary$Control, membership_summary$Treat30, membership_summary$Treat35)
@@ -1761,7 +1752,7 @@ pattern_counts <- setNames(membership_summary$Freq, membership_summary$pattern)
 pattern_labels <- paste0(names(pattern_counts), " (n=", pattern_counts, ")")
 names(pattern_labels) <- names(pattern_counts)
 
-# Plot as before
+# Plot 
 ggplot(membership_summary,
        aes(axis1 = Cluster,
            axis2 = factor(Control, levels = c(0, 1), labels = c("Not Hub", "Hub")),
@@ -1772,7 +1763,7 @@ ggplot(membership_summary,
   geom_stratum(width = 1/6, fill = "grey80", color = "black") +
   geom_text(stat = "stratum", aes(label = after_stat(stratum)), size = 4) +
   scale_x_discrete(limits = c("Cluster", "Control", "Treat30", "Treat35"),
-                   labels = c("Cluster" = "Cluster 8 Genes",
+                   labels = c("Cluster" = "Cluster 3 Genes",
                               "Control" = "Control",
                               "Treat30" = "Treat30",
                               "Treat35" = "Treat35")) +
@@ -1782,10 +1773,11 @@ ggplot(membership_summary,
     labels = pattern_labels
   ) +
   theme_minimal() +
-  labs(title = "Cluster 8: Overlap of Top 10% Hub Genes Across Conditions",
+  labs(title = "Cluster 3: Overlap of Top 10% Hub Genes Across Conditions",
        y = "Number of Genes", x = "") +
   theme(axis.text.y = element_blank(),
         axis.ticks.y = element_blank())
+
 
 ## bar plot
 library(dplyr)
@@ -1793,6 +1785,7 @@ library(ggplot2)
 library(RColorBrewer)
 
 # Assume membership_summary and pattern_labels are already created as in your alluvial plot code
+
 # Calculate total number of unique hub genes across all conditions
 unique_hubs <- unique(c(top10pct_hubs_control, top10pct_hubs_treat30, top10pct_hubs_treat35))
 total_hubs <- length(unique_hubs)
@@ -1810,7 +1803,7 @@ membership_summary$pattern <- factor(
 # Assign colors (same as alluvial)
 bar_colors <- setNames(RColorBrewer::brewer.pal(length(pattern_labels), "Set2"), names(pattern_labels))
 
-bar8 <- ggplot(membership_summary, aes(x = "Cluster 8", y = Percent, fill = pattern)) +
+bar3 <- ggplot(membership_summary, aes(x = "Cluster 3", y = Percent, fill = pattern)) +
   geom_bar(stat = "identity", width = 0.1, color = "black") +
   scale_fill_manual(
     name = "Hub Pattern\n(Control.Treat30.Treat35)",
@@ -1818,7 +1811,7 @@ bar8 <- ggplot(membership_summary, aes(x = "Cluster 8", y = Percent, fill = patt
     labels = pattern_labels
   ) +
   labs(
-    title = "Cluster 8: Distribution of Hub Gene Overlap Patterns",
+    title = "Cluster 3: Distribution of Hub Gene Overlap Patterns",
     x = "",
     y = "Percent of Unique Hub Genes"
   ) +
@@ -1832,18 +1825,18 @@ bar8 <- ggplot(membership_summary, aes(x = "Cluster 8", y = Percent, fill = patt
 
 
 #### Export the network of a specific cluster - cluster9
-cluster9_modules <- c("darkgreen", "yellow", "bisque4", "grey60")  # replace with your actual module colors for cluster9
-inCluster9 <- moduleColors %in% cluster9_modules #Select genes belonging to these modules
-cluster9_genes <- colnames(datExpr)[inCluster9] ##2057
+cluster9_modules <- c("brown4", "darkgreen")  # replace with your actual module colors for cluster9
+inCluster <- moduleColors %in% cluster9_modules
+cluster9_genes <- probes[inCluster] ##536
 
 # Subset expression data for each group
-datExpr_control_cluster9 <- datExpr[control_samples, cluster9_genes]
-datExpr_treat30_cluster9 <- datExpr[treat30_samples, cluster9_genes]
-datExpr_treat35_cluster9 <- datExpr[treat35_samples, cluster9_genes]
+datExpr_control_cluster9 <- datExpr[control_samples, cluster9_genes ]
+datExpr_treat30_cluster9 <- datExpr[treat30_samples, cluster9_genes ]
+datExpr_treat35_cluster9 <- datExpr[treat35_samples, cluster9_genes ]
 
-# # Calculate intramodular connectivity for for all genes in a cluster/module using only the genes in that module and only the samples for each condition
-# # kWithin: sum of connection strengths with other module genes
-# #add genes names to connectivity vectors
+# Calculate intramodular connectivity for for all genes in a cluster/module using only the genes in that module and only the samples for each condition
+# kWithin: sum of connection strengths with other module genes
+#add genes names to connectivity vectors
 # kWithin_control <- softConnectivity(datExpr_control_cluster9)
 # names(kWithin_control) <- colnames(datExpr_control_cluster9)
 # kWithin_treat30 <- softConnectivity(datExpr_treat30_cluster9)
@@ -1851,11 +1844,7 @@ datExpr_treat35_cluster9 <- datExpr[treat35_samples, cluster9_genes]
 # kWithin_treat35 <- softConnectivity(datExpr_treat35_cluster9)
 # names(kWithin_treat35) <- colnames(datExpr_treat35_cluster9)
 
-# Number of top 10% hub genes for each group
-#select the top 10% hub genes in each module based on intramodular connectivity (common threshold)
-#Top 10% connectivity → ~100 hubs per 1000-gene module
-# Use sum of absolute correlations as a proxy for connectivity (ranks genes by their overall co-expression with all other genes in the module)
-
+# Use sum of absolute correlations as a proxy for connectivity
 # For control group
 # Remove genes with zero variance
 var_genes <- apply(datExpr_control_cluster9, 2, function(x) var(x, na.rm = TRUE) > 0)
@@ -1894,11 +1883,13 @@ top10pct_hubs_treat35_9 <- names(sort(hub_score_treat35, decreasing = TRUE))[1:c
 
 # Save the top 10% hub genes as CSV files
 write.csv(data.frame(Gene = top10pct_hubs_control),
-          file = "top10pct_hub_genes_control_cluster9_2.csv", row.names = FALSE)
+          file = "top10pct_hub_genes_control_cluster9.csv", row.names = FALSE)
 write.csv(data.frame(Gene = top10pct_hubs_treat30),
-          file = "top10pct_hub_genes_treat30_cluster9_2.csv", row.names = FALSE)
+          file = "top10pct_hub_genes_treat30_cluster9.csv", row.names = FALSE)
 write.csv(data.frame(Gene = top10pct_hubs_treat35),
-          file = "top10pct_hub_genes_treat35_cluster9_2.csv", row.names = FALSE)
+          file = "top10pct_hub_genes_treat35_cluster9.csv", row.names = FALSE)
+
+#### Identify the top Hub Gene per cluster and temp
 
 # For control group
 top10pct_hubs_control <- names(sort(hub_score_control, decreasing = TRUE))[1:ceiling(0.10 * length(hub_score_control))]
@@ -1914,59 +1905,12 @@ top10pct_hubs_treat35 <- names(sort(hub_score_treat35, decreasing = TRUE))[1:cei
 top_hub_treat35 <- top10pct_hubs_treat35[which.max(hub_score_treat35[top10pct_hubs_treat35])]
 
 cat("Top hub gene (control, top 10%):", top_hub_control, "\n")
-#Montipora_capitata_HIv3___RNAseq.g24713.t1  
+#Porites_compressa_HIv1___RNAseq.g36475.t1 
 cat("Top hub gene (treat30, top 10%):", top_hub_treat30, "\n")
-#Montipora_capitata_HIv3___RNAseq.g15653.t1 
+#Porites_compressa_HIv1___RNAseq.38615_t 
 cat("Top hub gene (treat35, top 10%):", top_hub_treat35, "\n")
-#Montipora_capitata_HIv3___RNAseq.g15049.t1  
+#Porites_compressa_HIv1___RNAseq.g13898.t1 
 
-####### Compare module preservation across conditions 
-####### Highlight Nodes That Change Hub Status
-# Highlight Top 10% Hubs
-# Hub changing status between control and temps at break-points per (30 and 35) for all clusters
-
-# library(dplyr)
-# library(tidyr)
-# library(ggplot2)
-# library(igraph)
-
-# # Select only the top 10 hub genes for each condition (less computationally heavy for plotting)
-# top10_genes_control <- top10pct_hubs_control[1:10]
-# top10_genes_treat30 <- top10pct_hubs_treat30[1:10]
-# top10_genes_treat35 <- top10pct_hubs_treat35[1:10]
-
-# # Subset expression data to these genes
-# datExpr_control_top10 <- datExpr_control_cluster9[, top10_genes_control, drop = FALSE]
-# datExpr_treat30_top10 <- datExpr_treat30_cluster9[, top10_genes_treat30, drop = FALSE]
-# datExpr_treat35_top10 <- datExpr_treat35_cluster9[, top10_genes_treat35, drop = FALSE]
-
-# # Build adjacency/correlation matrices
-# adj_control_top10 <- abs(cor(datExpr_control_top10, method = "pearson"))
-# adj_treat30_top10 <- abs(cor(datExpr_treat30_top10, method = "pearson"))
-# adj_treat35_top10 <- abs(cor(datExpr_treat35_top10, method = "pearson"))
-
-# # Create igraph objects
-# g_control_top10 <- graph_from_adjacency_matrix(adj_control_top10, mode = "undirected", weighted = TRUE, diag = FALSE)
-# g_treat30_top10 <- graph_from_adjacency_matrix(adj_treat30_top10, mode = "undirected", weighted = TRUE, diag = FALSE)
-# g_treat35_top10 <- graph_from_adjacency_matrix(adj_treat35_top10, mode = "undirected", weighted = TRUE, diag = FALSE)
-
-# # Highlight the top hub gene (by kWithin) in red, others in gray
-# V(g_control_top10)$color <- ifelse(names(V(g_control_top10)) == top_hub_control, "red", "gray")
-# V(g_treat30_top10)$color <- ifelse(names(V(g_treat30_top10)) == top_hub_treat30, "red", "gray")
-# V(g_treat35_top10)$color <- ifelse(names(V(g_treat35_top10)) == top_hub_treat35, "red", "gray")
-
-# V(g_control_top10)$label <- ifelse(names(V(g_control_top10)) == top_hub_control, top_hub_control, "")
-# V(g_treat30_top10)$label <- ifelse(names(V(g_treat30_top10)) == top_hub_treat30, top_hub_treat30, "")
-# V(g_treat35_top10)$label <- ifelse(names(V(g_treat35_top10)) == top_hub_treat35, top_hub_treat35, "")
-
-# # Plot networks
-# pdf("network_top10genes_cluster9.pdf", width = 12, height = 8)
-# par(mfrow = c(1, 3))
-# plot(g_control_top10, main = "Control: Top 10 Hubs", vertex.label = V(g_control_top10)$label, vertex.size = 8)
-# plot(g_treat30_top10, main = "Treat30: Top 10 Hubs", vertex.label = V(g_treat30_top10)$label, vertex.size = 8)
-# plot(g_treat35_top10, main = "Treat35: Top 10 Hubs", vertex.label = V(g_treat35_top10)$label, vertex.size = 8)
-# par(mfrow = c(1, 1))
-# dev.off()
 
 #### Using the ggalluvial package to visualize the overlap of the top 10% hub genes in selected clusters for control, treat30, and 
 #### treat35.
@@ -1974,7 +1918,7 @@ cat("Top hub gene (treat35, top 10%):", top_hub_treat35, "\n")
 library(ggalluvial)
 library(dplyr)
 
-# All genes in cluster 9
+# All genes in cluster 5
 all_genes <- cluster9_genes
 
 # Build membership matrix
@@ -2001,7 +1945,7 @@ pattern_counts <- setNames(membership_summary$Freq, membership_summary$pattern)
 pattern_labels <- paste0(names(pattern_counts), " (n=", pattern_counts, ")")
 names(pattern_labels) <- names(pattern_counts)
 
-# Plot as before
+# Plot 
 ggplot(membership_summary,
        aes(axis1 = Cluster,
            axis2 = factor(Control, levels = c(0, 1), labels = c("Not Hub", "Hub")),
@@ -2026,6 +1970,7 @@ ggplot(membership_summary,
        y = "Number of Genes", x = "") +
   theme(axis.text.y = element_blank(),
         axis.ticks.y = element_blank())
+
 
 ## bar plot
 library(dplyr)
@@ -2069,28 +2014,227 @@ bar9 <- ggplot(membership_summary, aes(x = "Cluster 9", y = Percent, fill = patt
     axis.ticks.x = element_blank()
   )
 
+
+
+#### Export the network of a specific cluster - cluster10
+cluster10_modules <- c("salmon4", "plum", "orangered4", "red", "darkorange", "lightpink4")  # replace with your actual module colors for cluster10
+inCluster <- moduleColors %in% cluster10_modules
+cluster10_genes <- probes[inCluster] ##1885
+
+# Subset expression data for each group
+datExpr_control_cluster10 <- datExpr[control_samples, cluster10_genes ]
+datExpr_treat30_cluster10 <- datExpr[treat30_samples, cluster10_genes ]
+datExpr_treat35_cluster10 <- datExpr[treat35_samples, cluster10_genes ]
+
+# Calculate intramodular connectivity for for all genes in a cluster/module using only the genes in that module and only the samples for each condition
+# kWithin: sum of connection strengths with other module genes
+#add genes names to connectivity vectors
+# kWithin_control <- softConnectivity(datExpr_control_cluster10)
+# names(kWithin_control) <- colnames(datExpr_control_cluster10)
+# kWithin_treat30 <- softConnectivity(datExpr_treat30_cluster10)
+# names(kWithin_treat30) <- colnames(datExpr_treat30_cluster10)
+# kWithin_treat35 <- softConnectivity(datExpr_treat35_cluster10)
+# names(kWithin_treat35) <- colnames(datExpr_treat35_cluster10)
+
+# Use sum of absolute correlations as a proxy for connectivity
+# For control group
+# Remove genes with zero variance
+var_genes <- apply(datExpr_control_cluster10, 2, function(x) var(x, na.rm = TRUE) > 0)
+datExpr_control_cluster10_filt <- datExpr_control_cluster10[, var_genes]
+
+cor_mat_control <- cor(datExpr_control_cluster10_filt, method = "pearson", use = "pairwise.complete.obs")
+diag(cor_mat_control) <- 0
+hub_score_control <- rowSums(abs(cor_mat_control), na.rm = TRUE)
+names(hub_score_control) <- colnames(datExpr_control_cluster10_filt)
+top10pct_hubs_control <- names(sort(hub_score_control, decreasing = TRUE))[1:ceiling(0.10 * length(hub_score_control))]
+top10pct_hubs_control_10 <- names(sort(hub_score_control, decreasing = TRUE))[1:ceiling(0.10 * length(hub_score_control))]
+
+# For treat30 group
+# Remove genes with zero variance
+var_genes <- apply(datExpr_treat30_cluster10, 2, function(x) var(x, na.rm = TRUE) > 0)
+datExpr_treat30_cluster10_filt <- datExpr_treat30_cluster10[, var_genes]
+
+cor_mat_treat30 <- cor(datExpr_treat30_cluster10, method = "pearson", use = "pairwise.complete.obs")
+diag(cor_mat_treat30) <- 0
+hub_score_treat30 <- rowSums(abs(cor_mat_treat30), na.rm = TRUE)
+names(hub_score_treat30) <- colnames(datExpr_treat30_cluster10)
+top10pct_hubs_treat30 <- names(sort(hub_score_treat30, decreasing = TRUE))[1:ceiling(0.10 * length(hub_score_treat30))]
+top10pct_hubs_treat30_10 <- names(sort(hub_score_treat30, decreasing = TRUE))[1:ceiling(0.10 * length(hub_score_treat30))]
+
+# For treat35 group 
+# Remove genes with zero variance
+var_genes <- apply(datExpr_treat35_cluster10, 2, function(x) var(x, na.rm = TRUE) > 0)
+datExpr_treat35_cluster10_filt <- datExpr_treat35_cluster10[, var_genes]
+
+cor_mat_treat35 <- cor(datExpr_treat35_cluster10, method = "pearson", use = "pairwise.complete.obs")
+diag(cor_mat_treat35) <- 0
+hub_score_treat35 <- rowSums(abs(cor_mat_treat35), na.rm = TRUE)
+names(hub_score_treat35) <- colnames(datExpr_treat35_cluster10)
+top10pct_hubs_treat35 <- names(sort(hub_score_treat35, decreasing = TRUE))[1:ceiling(0.10 * length(hub_score_treat35))]
+top10pct_hubs_treat35_10 <- names(sort(hub_score_treat35, decreasing = TRUE))[1:ceiling(0.10 * length(hub_score_treat35))]
+
+# Save the top 10% hub genes as CSV files
+write.csv(data.frame(Gene = top10pct_hubs_control),
+          file = "top10pct_hub_genes_control_cluster10.csv", row.names = FALSE)
+write.csv(data.frame(Gene = top10pct_hubs_treat30),
+          file = "top10pct_hub_genes_treat30_cluster10.csv", row.names = FALSE)
+write.csv(data.frame(Gene = top10pct_hubs_treat35),
+          file = "top10pct_hub_genes_treat35_cluster10.csv", row.names = FALSE)
+
+#### Identify the top Hub Gene per cluster and temp
+
+# For control group
+top10pct_hubs_control <- names(sort(hub_score_control, decreasing = TRUE))[1:ceiling(0.10 * length(hub_score_control))]
+# Find the top hub gene among the top 10%
+top_hub_control <- top10pct_hubs_control[which.max(hub_score_control[top10pct_hubs_control])]
+
+# For treat30 group
+top10pct_hubs_treat30 <- names(sort(hub_score_treat30, decreasing = TRUE))[1:ceiling(0.10 * length(hub_score_treat30))]
+top_hub_treat30 <- top10pct_hubs_treat30[which.max(hub_score_treat30[top10pct_hubs_treat30])]
+
+# For treat35 group
+top10pct_hubs_treat35 <- names(sort(hub_score_treat35, decreasing = TRUE))[1:ceiling(0.10 * length(hub_score_treat35))]
+top_hub_treat35 <- top10pct_hubs_treat35[which.max(hub_score_treat35[top10pct_hubs_treat35])]
+
+cat("Top hub gene (control, top 10%):", top_hub_control, "\n")
+#Porites_compressa_HIv1___RNAseq.g12188.t1 
+cat("Top hub gene (treat30, top 10%):", top_hub_treat30, "\n")
+#Porites_compressa_HIv1___RNAseq.g5267.t1 
+cat("Top hub gene (treat35, top 10%):", top_hub_treat35, "\n")
+#Porites_compressa_HIv1___RNAseq.g5102.t1 
+
+
+#### Using the ggalluvial package to visualize the overlap of the top 10% hub genes in selected clusters for control, treat30, and 
+#### treat35.
+
+library(ggalluvial)
+library(dplyr)
+
+# All genes in cluster 5
+all_genes <- cluster10_genes
+
+# Build membership matrix
+membership <- data.frame(
+  Gene = all_genes,
+  Control = as.integer(all_genes %in% top10pct_hubs_control),
+  Treat30 = as.integer(all_genes %in% top10pct_hubs_treat30),
+  Treat35 = as.integer(all_genes %in% top10pct_hubs_treat35)
+)
+
+# Filter to keep only genes that are a hub in at least one condition
+membership <- membership %>%
+  filter(Control == 1 | Treat30 == 1 | Treat35 == 1)
+
+# Summarize overlap patterns
+membership_summary <- membership %>%
+  group_by(Control, Treat30, Treat35) %>%
+  summarise(Freq = n(), .groups = "drop") %>%
+  mutate(Cluster = "Cluster 10 Genes")
+
+# Create a label for each interaction pattern
+membership_summary$pattern <- interaction(membership_summary$Control, membership_summary$Treat30, membership_summary$Treat35)
+pattern_counts <- setNames(membership_summary$Freq, membership_summary$pattern)
+pattern_labels <- paste0(names(pattern_counts), " (n=", pattern_counts, ")")
+names(pattern_labels) <- names(pattern_counts)
+
+# Plot 
+ggplot(membership_summary,
+       aes(axis1 = Cluster,
+           axis2 = factor(Control, levels = c(0, 1), labels = c("Not Hub", "Hub")),
+           axis3 = factor(Treat30, levels = c(0, 1), labels = c("Not Hub", "Hub")),
+           axis4 = factor(Treat35, levels = c(0, 1), labels = c("Not Hub", "Hub")),
+           y = Freq)) +
+  geom_alluvium(aes(fill = pattern), width = 1/8, alpha = 0.8) +
+  geom_stratum(width = 1/6, fill = "grey80", color = "black") +
+  geom_text(stat = "stratum", aes(label = after_stat(stratum)), size = 4) +
+  scale_x_discrete(limits = c("Cluster", "Control", "Treat30", "Treat35"),
+                   labels = c("Cluster" = "Cluster 10 Genes",
+                              "Control" = "Control",
+                              "Treat30" = "Treat30",
+                              "Treat35" = "Treat35")) +
+  scale_fill_manual(
+    name = "Hub Pattern\n(Control.Treat30.Treat35)",
+    values = setNames(RColorBrewer::brewer.pal(length(pattern_labels), "Set2"), names(pattern_labels)),
+    labels = pattern_labels
+  ) +
+  theme_minimal() +
+  labs(title = "Cluster 10: Overlap of Top 10% Hub Genes Across Conditions",
+       y = "Number of Genes", x = "") +
+  theme(axis.text.y = element_blank(),
+        axis.ticks.y = element_blank())
+
+
+## bar plot
+library(dplyr)
+library(ggplot2)
+library(RColorBrewer)
+
+# Assume membership_summary and pattern_labels are already created as in your alluvial plot code
+
+# Calculate total number of unique hub genes across all conditions
+unique_hubs <- unique(c(top10pct_hubs_control, top10pct_hubs_treat30, top10pct_hubs_treat35))
+total_hubs <- length(unique_hubs)
+
+# Add percent column to membership_summary
+membership_summary <- membership_summary %>%
+  mutate(Percent = 100 * Freq / total_hubs)
+
+# For plotting, order patterns by frequency (optional)
+membership_summary$pattern <- factor(
+  membership_summary$pattern,
+  levels = membership_summary$pattern[order(-membership_summary$Freq)]
+)
+
+# Assign colors (same as alluvial)
+bar_colors <- setNames(RColorBrewer::brewer.pal(length(pattern_labels), "Set2"), names(pattern_labels))
+
+bar10 <- ggplot(membership_summary, aes(x = "Cluster 10", y = Percent, fill = pattern)) +
+  geom_bar(stat = "identity", width = 0.1, color = "black") +
+  scale_fill_manual(
+    name = "Hub Pattern\n(Control.Treat30.Treat35)",
+    values = bar_colors,
+    labels = pattern_labels
+  ) +
+  labs(
+    title = "Cluster 10: Distribution of Hub Gene Overlap Patterns",
+    x = "",
+    y = "Percent of Unique Hub Genes"
+  ) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_blank(),
+    axis.ticks.x = element_blank()
+  )
+
+
+
 ##### combine all bar plots into one figure
 library(patchwork)
-bar5 + bar6 + bar8 + bar9
+bar1 + bar2 + bar3 + bar9 + bar10
 
 
-######## Make a global alluvial plot showing the overlap of all top 10% hub genes from clusters 5, 6, 8, and 9 across the three temperature groups
+######## Make a global alluvial plot showing the overlap of all top 10% hub genes from all clusters across the three temperature groups
 
 # Combine all top 10% hub genes from all clusters and all conditions
 all_top_hubs <- unique(c(
-  top10pct_hubs_control_5, top10pct_hubs_treat30_5, top10pct_hubs_treat35_5,
-  top10pct_hubs_control_6, top10pct_hubs_treat30_6, top10pct_hubs_treat35_6,
-  top10pct_hubs_control_8, top10pct_hubs_treat30_8, top10pct_hubs_treat35_8,
-  top10pct_hubs_control_9, top10pct_hubs_treat30_9, top10pct_hubs_treat35_9
+  top10pct_hubs_control_1, top10pct_hubs_treat30_1, top10pct_hubs_treat35_1,
+  top10pct_hubs_control_2, top10pct_hubs_treat30_2, top10pct_hubs_treat35_2,
+  top10pct_hubs_control_3, top10pct_hubs_treat30_3, top10pct_hubs_treat35_3,
+  top10pct_hubs_control_9, top10pct_hubs_treat30_9, top10pct_hubs_treat35_9,
+  top10pct_hubs_control_10, top10pct_hubs_treat30_10, top10pct_hubs_treat35_10
 ))
 
 # For each gene, check if it is a top hub in each group (any cluster)
 membership_global <- data.frame(
   Gene = all_top_hubs,
-  Control = as.integer(all_top_hubs %in% c(top10pct_hubs_control_5, top10pct_hubs_control_6, top10pct_hubs_control_8, top10pct_hubs_control_9)),
-  Treat30 = as.integer(all_top_hubs %in% c(top10pct_hubs_treat30_5, top10pct_hubs_treat30_6, top10pct_hubs_treat30_8, top10pct_hubs_treat30_9)),
-  Treat35 = as.integer(all_top_hubs %in% c(top10pct_hubs_treat35_5, top10pct_hubs_treat35_6, top10pct_hubs_treat35_8, top10pct_hubs_treat35_9))
+  Control = as.integer(all_top_hubs %in% c(
+    top10pct_hubs_control_1, top10pct_hubs_control_2, top10pct_hubs_control_3, top10pct_hubs_control_9, top10pct_hubs_control_10)),
+  Treat30 = as.integer(all_top_hubs %in% c(
+    top10pct_hubs_treat30_1, top10pct_hubs_treat30_2, top10pct_hubs_treat30_3, top10pct_hubs_treat30_9, top10pct_hubs_treat30_10)),
+  Treat35 = as.integer(all_top_hubs %in% c(
+    top10pct_hubs_treat35_1, top10pct_hubs_treat35_2, top10pct_hubs_treat35_3, top10pct_hubs_treat35_9, top10pct_hubs_treat35_10))
 )
+
 
 # Filter to keep only genes that are a hub in at least one condition
 membership_global <- membership_global %>%
@@ -2104,7 +2248,11 @@ membership_summary_global <- membership_global %>%
   summarise(Freq = n(), .groups = "drop") %>%
   mutate(Global = "All Top 10% Hubs")
 
-membership_summary_global$pattern <- interaction(membership_summary_global$Control, membership_summary_global$Treat30, membership_summary_global$Treat35)
+membership_summary_global$pattern <- interaction(
+  membership_summary_global$Control,
+  membership_summary_global$Treat30,
+  membership_summary_global$Treat35
+)
 pattern_counts <- setNames(membership_summary_global$Freq, membership_summary_global$pattern)
 pattern_labels <- paste0(names(pattern_counts), " (n=", pattern_counts, ")")
 names(pattern_labels) <- names(pattern_counts)
@@ -2125,11 +2273,10 @@ ggplot(membership_summary_global,
                               "Treat35" = "Treat35")) +
   scale_fill_brewer(type = "qual", palette = "Set2", name = "Pattern", labels = pattern_labels) +
   theme_minimal() +
-  labs(title = "Global Overlap of Top 10% Hub Genes Across Clusters and Conditions",
+  labs(title = "Global Overlap of Top 10% Hub Genes Across Clusters 1,2,3,9,10 and Conditions",
        y = "Number of Genes", x = "") +
   theme(axis.text.y = element_blank(),
         axis.ticks.y = element_blank())
-
 
 
 
@@ -2147,41 +2294,50 @@ ggplot(membership_summary_global,
 
 # Use all genes in the selected clusters
 
-cluster5_modules <- c("lightcyan", "orange", "blue", "salmon") #Define the module colors for your cluster of interest
-inCluster5 <- moduleColors %in% cluster5_modules #Select genes belonging to these modules
-cluster5_genes <- colnames(datExpr)[inCluster5]
+cluster1_modules <- c("darkred", "turquoise")  
+inCluster <- moduleColors %in% cluster1_modules #Select genes belonging to these modules
+cluster1_genes <- probes[inCluster] ##8814
 
-cluster6_modules <- c("lightgreen", "sienna3")
-inCluster6 <- moduleColors %in% cluster6_modules #Select genes belonging to these modules
-cluster6_genes <- colnames(datExpr)[inCluster6]
+cluster2_modules <- c("black", "pink", "lightgreen", "mediumpurple3", "darkturquoise", "yellow4")  
+inCluster <- moduleColors %in% cluster2_modules
+cluster2_genes <- probes[inCluster] ##3561
 
-cluster8_modules <- c("turquoise") 
-inCluster8 <- moduleColors %in% cluster8_modules #Select genes belonging to these modules
-cluster8_genes <- colnames(datExpr)[inCluster8]
+cluster3_modules <- c("skyblue2", "floralwhite", "coral1", "cyan", "blue", "grey60", "paleturquoise")  
+inCluster <- moduleColors %in% cluster3_modules
+cluster3_genes <- probes[inCluster] ##6935
 
-cluster9_modules <- c("darkgreen", "yellow", "bisque4", "grey60") 
-inCluster9 <- moduleColors %in% cluster9_modules #Select genes belonging to these modules
-cluster9_genes <- colnames(datExpr)[inCluster9]
+cluster9_modules <- c("brown4", "darkgreen")  
+inCluster <- moduleColors %in% cluster9_modules
+cluster9_genes <- probes[inCluster] ##536
 
-# Subset expression data
-datExpr_control_all <- datExpr[control_samples, cluster5_genes]
-datExpr_treat30_all <- datExpr[treat30_samples, cluster5_genes]
-datExpr_treat35_all <- datExpr[treat35_samples, cluster5_genes]
+cluster10_modules <- c("salmon4", "plum", "orangered4", "red", "darkorange", "lightpink4")  
+inCluster <- moduleColors %in% cluster10_modules
+cluster10_genes <- probes[inCluster] ##1885
+
+## Subset expression data
+datExpr_control_all <- datExpr[control_samples, cluster1_genes]
+datExpr_treat30_all <- datExpr[treat30_samples, cluster1_genes]
+datExpr_treat35_all <- datExpr[treat35_samples, cluster1_genes]
 
 #or
-datExpr_control_all <- datExpr[control_samples, cluster6_genes]
-datExpr_treat30_all <- datExpr[treat30_samples, cluster6_genes]
-datExpr_treat35_all <- datExpr[treat35_samples, cluster6_genes]
+datExpr_control_all <- datExpr[control_samples, cluster2_genes]
+datExpr_treat30_all <- datExpr[treat30_samples, cluster2_genes]
+datExpr_treat35_all <- datExpr[treat35_samples, cluster2_genes]
 
 #or
-datExpr_control_all <- datExpr[control_samples, cluster8_genes]
-datExpr_treat30_all <- datExpr[treat30_samples, cluster8_genes]
-datExpr_treat35_all <- datExpr[treat35_samples, cluster8_genes]
+datExpr_control_all <- datExpr[control_samples, cluster3_genes]
+datExpr_treat30_all <- datExpr[treat30_samples, cluster3_genes]
+datExpr_treat35_all <- datExpr[treat35_samples, cluster3_genes]
 
 #or
 datExpr_control_all <- datExpr[control_samples, cluster9_genes]
 datExpr_treat30_all <- datExpr[treat30_samples, cluster9_genes]
 datExpr_treat35_all <- datExpr[treat35_samples, cluster9_genes]
+
+#or
+datExpr_control_all <- datExpr[control_samples, cluster10_genes]
+datExpr_treat30_all <- datExpr[treat30_samples, cluster10_genes]
+datExpr_treat35_all <- datExpr[treat35_samples, cluster10_genes]
 
 #  Build Adjacency/Correlation Matrices
 adj_control_all <- abs(cor(datExpr_control_all, method = "pearson"))
@@ -2350,52 +2506,60 @@ cat("Permutation p-value:", p_value, "\n")
 
 
 
-
 ######## Extract the genes from clusters for GO enrichment analysis with ViSEAGO
 
-# For cluster 5
-# cluster5_genes: vector of gene names in cluster 5
+# For cluster 1
+# cluster1_genes: vector of gene names in cluster 1
 # datExpr: samples x all genes (genes as columns)
 
-# Subset datExpr to cluster 5 genes
-cluster5_counts <- datExpr[, cluster5_genes, drop = FALSE]
+# Subset datExpr to cluster 1 genes
+cluster1_counts <- datExpr[, cluster1_genes, drop = FALSE]
 
 # Transpose so genes are rows, samples are columns (ViSEAGO expects this format)
-cluster5_counts_t <- as.data.frame(t(cluster5_counts))
-cluster5_counts_t$gene_id <- rownames(cluster5_counts_t)
+cluster1_counts_t <- as.data.frame(t(cluster1_counts))
+cluster1_counts_t$gene_id <- rownames(cluster1_counts_t)
 
 # Move gene_id to first column
-cluster5_counts_t <- cluster5_counts_t[, c(ncol(cluster5_counts_t), 1:(ncol(cluster5_counts_t)-1))]
+cluster1_counts_t <- cluster1_counts_t[, c(ncol(cluster1_counts_t), 1:(ncol(cluster1_counts_t)-1))]
 
 # Save as CSV
-write.csv(cluster5_counts_t, file = "cluster5_gene_counts.csv", row.names = FALSE)
+write.csv(cluster1_counts_t, file = "cluster1_gene_counts.csv", row.names = FALSE)
 
-# For cluster 6
-# cluster6_genes: vector of gene names in cluster 6
-# Subset datExpr to cluster 6 genes
-cluster6_counts <- datExpr[, cluster6_genes, drop = FALSE]
+
+# For cluster 2
+# cluster1_genes: vector of gene names in cluster 2
+# datExpr: samples x all genes (genes as columns)
+
+# Subset datExpr to cluster 2 genes
+cluster2_counts <- datExpr[, cluster2_genes, drop = FALSE]
+
 # Transpose so genes are rows, samples are columns (ViSEAGO expects this format)
-cluster6_counts_t <- as.data.frame(t(cluster6_counts))
-cluster6_counts_t$gene_id <- rownames(cluster6_counts_t)
-# Move gene_id to first column
-cluster6_counts_t <- cluster6_counts_t[, c(ncol(cluster6_counts_t), 1:(ncol(cluster6_counts_t)-1))]
-# Save as CSV
-write.csv(cluster6_counts_t, file = "cluster6_gene_counts.csv", row.names = FALSE)
+cluster2_counts_t <- as.data.frame(t(cluster2_counts))
+cluster2_counts_t$gene_id <- rownames(cluster2_counts_t)
 
-# For cluster 8
-# cluster8_genes: vector of gene names in cluster 8
-# Subset datExpr to cluster 8 genes
-cluster8_counts <- datExpr[, cluster8_genes, drop = FALSE]
-# Transpose so genes are rows, samples are columns (ViSEAGO expects this format)
-cluster8_counts_t <- as.data.frame(t(cluster8_counts))
-cluster8_counts_t$gene_id <- rownames(cluster8_counts_t)
 # Move gene_id to first column
-cluster8_counts_t <- cluster8_counts_t[, c(ncol(cluster8_counts_t), 1:(ncol(cluster8_counts_t)-1))]
+cluster2_counts_t <- cluster2_counts_t[, c(ncol(cluster2_counts_t), 1:(ncol(cluster2_counts_t)-1))]
+
 # Save as CSV
-write.csv(cluster8_counts_t, file = "cluster8_gene_counts.csv", row.names = FALSE)
+write.csv(cluster2_counts_t, file = "cluster2_gene_counts.csv", row.names = FALSE)
+
+
+# For cluster 3
+# cluster1_genes: vector of gene names in cluster 3
+# datExpr: samples x all genes (genes as columns)
+# Subset datExpr to cluster 3 genes
+cluster3_counts <- datExpr[, cluster3_genes, drop = FALSE]
+# Transpose so genes are rows, samples are columns (ViSEAGO expects this format)
+cluster3_counts_t <- as.data.frame(t(cluster3_counts))
+cluster3_counts_t$gene_id <- rownames(cluster3_counts_t)
+# Move gene_id to first column
+cluster3_counts_t <- cluster3_counts_t[, c(ncol(cluster3_counts_t), 1:(ncol(cluster3_counts_t)-1))]
+# Save as CSV
+write.csv(cluster3_counts_t, file = "cluster3_gene_counts.csv", row.names = FALSE)
 
 # For cluster 9
-# cluster9_genes: vector of gene names in cluster 9
+# cluster1_genes: vector of gene names in cluster 9
+# datExpr: samples x all genes (genes as columns)
 # Subset datExpr to cluster 9 genes
 cluster9_counts <- datExpr[, cluster9_genes, drop = FALSE]
 # Transpose so genes are rows, samples are columns (ViSEAGO expects this format)
@@ -2405,3 +2569,16 @@ cluster9_counts_t$gene_id <- rownames(cluster9_counts_t)
 cluster9_counts_t <- cluster9_counts_t[, c(ncol(cluster9_counts_t), 1:(ncol(cluster9_counts_t)-1))]
 # Save as CSV
 write.csv(cluster9_counts_t, file = "cluster9_gene_counts.csv", row.names = FALSE)
+
+# For cluster 10
+# cluster1_genes: vector of gene names in cluster 10
+# datExpr: samples x all genes (genes as columns)
+# Subset datExpr to cluster 10 genes
+cluster10_counts <- datExpr[, cluster10_genes, drop = FALSE]
+# Transpose so genes are rows, samples are columns (ViSEAGO expects this format)
+cluster10_counts_t <- as.data.frame(t(cluster10_counts))
+cluster10_counts_t$gene_id <- rownames(cluster10_counts_t)
+# Move gene_id to first column
+cluster10_counts_t <- cluster10_counts_t[, c(ncol(cluster10_counts_t), 1:(ncol(cluster10_counts_t)-1))]
+# Save as CSV
+write.csv(cluster10_counts_t, file = "cluster10_gene_counts.csv", row.names = FALSE)
