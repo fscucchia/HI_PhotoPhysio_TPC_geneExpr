@@ -1,10 +1,9 @@
 
-############# GWENA (Gene Whole co-Expression Network Analysis) #############
+############# WGCNA (Weighted Gene Co-expression Network Analysis) #############
+############# MCAP (Montipora capitata) RNAseq data #############
+# Federica Scucchia June 2025
 
 ## load libraries
-# if (!requireNamespace("BiocManager", quietly=TRUE))
-#   install.packages("BiocManager")
-# BiocManager::install("GWENA")
 library("WGCNA")              #BiocManager::install("WGCNA", force = TRUE)
 library("flashClust")         #install.packages("flashClust")
 library("pheatmap")  
@@ -23,8 +22,7 @@ library("gridExtra")            #install.packages("gridExtra")
 #library("VennDiagram")          #install.packages("VennDiagram")
 library("patchwork")            #install.packages("patchwork")
 library("dplyr")
-# library(GWENA)
-# library(magrittr) # Not mandatory, we use the pipe `%>%` to ease readability.
+
 
 #treatment information
 treatmentinfo <- read.csv("RNAseq_Mcap_data.csv", header = TRUE, sep = ";")
@@ -103,11 +101,7 @@ PCA <- ggplot(gPCAdata, aes(PC1, PC2, color=temp)) +
 ggsave(file = "PCA_all_vst_Mcap.png", PCA)
 
 
-#### Compile GWENA/WGCNA Dataset
-
-# GWENA support expression matrix data coming from either RNA-seq or microarray experiments. 
-# Expression data have to be stored as text or spreadsheet files and formatted with genes as columns 
-# and samples as rows 
+#### Compile WGCNA Dataset
 
 #Transpose the filtered gene count matrix so that the gene IDs are rows and the sample IDs are columns.
 datExpr <- as.data.frame(t(assay(gvst))) #transpose to output to a new data frame with the column names as row names. And make all data numeric
@@ -131,114 +125,6 @@ ncol(datExpr)
 # Number of samples
 nrow(datExpr)
 #> [1] 24
-
-# Checking expression data set is correctly defined
-is_data_expr(datExpr)
-# $bool
-# [1] TRUE
-
-## Network building
-# Gene co-expression networks are an ensemble of genes (nodes) linked to each other (edges) 
-# according to the strength of their relation.
-#GWENA uses Spearman correlation by default. It is less sensitive to outliers which are 
-#frequent in transcriptomics datasets 
-
-# I will use a signed network because we have a relatively high softPower, according 
-# to >12 (https://peterlangfelder.com/2018/11/25/__trashed/). 
-# Moreover, in expression data where you are interested in when expression on one gene increases or decreases 
-# with expression level of another you would use a signed network (when you are interested in the direction of change, correlation and anti-correlation, you use a signed network).
-
-
-threads_to_use <- 12
-threads_to_use <- 14
-# net <- build_net(datExpr, cor_func = "spearman", 
-#                  n_threads = threads_to_use)
-
-net <- build_net(datExpr, 
-                 cor_func = "spearman", 
-                 n_threads = threads_to_use, 
-                 network_type = "signed") 
-
-net <- build_net(datExpr, 
-                 cor_func = "pearson", 
-                 n_threads = threads_to_use, 
-                 network_type = "signed") 
-
-
-# Power selected :
-net$metadata$power
-#18
-
-# Fit of the power law to data ($R^2$) :
-fit_power_table <- net$metadata$fit_power_table
-fit_power_table[fit_power_table$Power == net$metadata$power, "SFT.R.sq"]
-#0.7342994
-
-# Plot R^2 (SFT.R.sq) vs Power
-library(ggplot2)
-fit_power_table <- net$metadata$fit_power_table
-ggplot(fit_power_table, aes(x = Power, y = SFT.R.sq)) +
-  geom_line() +
-  geom_point() +
-  geom_hline(yintercept = 0.8, linetype = "dashed", color = "red") +
-  labs(title = "Scale-Free Topology Fit (R²) vs Power",
-       x = "Soft-thresholding Power",
-       y = "Scale-Free Topology Fit (R²)") +
-  theme_minimal()
-
-####  Modules detection
-# At this point, the network is a complete graph: all nodes are connected to all other nodes with different strengths. 
-# Because gene co-expression networks have a scale free property, groups of genes are strongly linked with one another. 
-# In co-expression networks these groups are called modules and assumed to be representative of genes working together to a 
-# common set of functions.
-
-modules <- detect_modules(datExpr, 
-                            net$network, 
-                            detailled_result = TRUE,
-                            merge_threshold = 0.25) #merge modules with >75% similarity 
-
-#Important: Module 0 contains all genes that did not fit into any modules.
-
-# Since this operation tends to create multiple smaller modules with highly similar expression profile 
-# (based on the eigengene of each), they are usually merged into one.
-
-# Number of modules before merging :
-length(unique(modules$modules_premerge))
-#> [1] 36
-# Number of modules after merging: 
-length(unique(modules$modules))
-#> [1] 4
-
-layout_mod_merge <- plot_modules_merge(
-  modules_premerge = modules$modules_premerge, 
-  modules_merged = modules$modules)
-
-#Resulting modules contain more genes whose repartition can be seen by a simple barplot.
-ggplot2::ggplot(data.frame(modules$modules %>% stack), 
-                ggplot2::aes(x = ind)) + ggplot2::stat_count() +
-  ggplot2::ylab("Number of genes") +
-  ggplot2::xlab("Module")
-
-#Each of the modules presents a distinct profile, which can be plotted in two figures to separate the positive (+ facet) and negative (- facet) correlations profile. As a summary of this profile, the eigengene (red line) is displayed to act as a signature.
-plot_expression_profiles(datExpr, modules$modules)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-########## WGCNA
 
 ### Network construction and consensus module detection
 # Choosing a soft-thresholding power: Analysis of network topology 
@@ -475,12 +361,12 @@ library(dendsort)
 row_dend = dendsort(hclust(dist(moduleTraitCor)))
 col_dend = dendsort(hclust(dist(t(moduleTraitCor))))
 
-pdf(file = "/work/pi_hputnam_uri_edu/fscucchia/20250424_ENCORE_HawaiiTPC_Federica/ENCORE_Hawaii_TPC_Rstudio/GWENA/Mcap/Module-trait-relationship-heatmap3.pdf", height = 11.5, width = 8)
+pdf(file = "/work/pi_hputnam_uri_edu/fscucchia/20250424_ENCORE_HawaiiTPC_Federica/ENCORE_Hawaii_TPC_Rstudio/GWENA/Mcap/Module-trait-relationship-heatmap_Mcap.pdf", height = 9, width = 8)
 ht=Heatmap(moduleTraitCor, name = "Module-Trait Eigengene Correlation", 
         col = blueWhiteRed(50), 
         row_names_side = "left", row_dend_side = "left",
         #width = unit(4, "in"), height = unit(8.5, "in"), 
-        column_order = 1:6, column_dend_reorder = FALSE, cluster_columns = hclust(dist(t(moduleTraitCor)), method = "average"), column_split = 3, column_dend_height = unit(0.2, "in"),
+        column_order = 1:6, column_dend_reorder = FALSE, cluster_columns = hclust(dist(t(moduleTraitCor)), method = "average"), column_split = 6, column_dend_height = unit(0.2, "in"),
         cluster_rows = METree, row_split = 10, row_gap = unit(2.5, "mm"), border = TRUE,
         cell_fun = function(j, i, x, y, w, h, col) {
         if(heatmappval[i, j] <= 0.05) {
@@ -741,6 +627,15 @@ plot(seg_fit5)
 # locations are reasonably certain. Slopes before and after breakpoints: Only the last change 
 # in slope (U2.temp_num) appears to be substantial (t value -2.67).
 
+
+AIC(fit5, seg_fit5)
+#          df       AIC
+# fit5      3 -21.75410
+# seg_fit5  7 -37.53489
+#Lower AIC/BIC suggests the segmented model best fits the data
+
+
+
 ##  Get fitted values and confidence intervals
 # Get predicted values and confidence intervals
 library(segmented)
@@ -842,6 +737,14 @@ summary(seg_fit6)
 # Boot restarting based on 6 samples. Last fit:
 # Convergence attained in 2 iterations (rel. change 7.9211e-11))
 
+#compare models
+AIC(fit6, seg_fit6)
+#          df       AIC
+# fit6      3 -15.09419
+# seg_fit6  7 -30.70362
+#Lower AIC suggests the segmented model best fits the data
+
+
 ##  Get fitted values and confidence intervals
 # Get predicted values and confidence intervals
 library(segmented)
@@ -937,6 +840,13 @@ summary(seg_fit8)
 # Boot restarting based on 6 samples. Last fit:
 # Convergence attained in 2 iterations (rel. change 8.2986e-12)
 
+#compare models
+AIC(fit8, seg_fit8)
+#          df       AIC
+# fit8      3 -12.11957
+# seg_fit8  7 -37.95740
+#Lower AIC/BIC suggests the segmented model best fits the data
+
 
 ##  Get fitted values and confidence intervals
 # Get predicted values and confidence intervals
@@ -1016,6 +926,28 @@ fit9 <- lm(Eigengene ~ temp_num, data = df_mod9)
 seg_fit9 <- segmented(fit9, seg.Z = ~temp_num, npsi = 2)
 
 summary(seg_fit9)
+# segmented.lm(obj = fit9, seg.Z = ~temp_num, npsi = 2)
+# Estimated Break-Point(s):
+#                  Est. St.Err
+# psi1.temp_num 19.830  1.747
+# psi2.temp_num 27.483  1.048
+# Coefficients of the linear terms:
+#             Estimate Std. Error t value Pr(>|t|)    
+# (Intercept) -0.86594    0.17857  -4.849 0.000129 ***
+# temp_num     0.06472    0.01167   5.544  2.9e-05 ***
+# U1.temp_num -0.14189    0.04063  -3.493       NA    
+# U2.temp_num  0.10089    0.04136   2.440       NA    
+# Residual standard error: 0.09905 on 18 degrees of freedom
+# Multiple R-Squared: 0.7391,  Adjusted R-squared: 0.6666 
+
+
+#compare models
+AIC(fit9, seg_fit9)
+#          df       AIC
+# fit9      3 -12.69290
+# seg_fit9  7 -35.77522
+#Lower AIC/BIC suggests the segmented model best fits the data
+
 
 ##  Get fitted values and confidence intervals
 # Get predicted values and confidence intervals
@@ -1134,22 +1066,14 @@ datExpr_treat35_cluster5 <- datExpr[treat35_samples, cluster5_genes ]
 # Use sum of absolute correlations as a proxy for connectivity (ranks genes by their overall co-expression with all other genes in the module)
 
 # For control group
-# Remove genes with zero variance
-var_genes <- apply(datExpr_control_cluster5, 2, function(x) var(x, na.rm = TRUE) > 0)
-datExpr_control_cluster5_filt <- datExpr_control_cluster5[, var_genes]
-
-cor_mat_control <- cor(datExpr_control_cluster5_filt, method = "pearson", use = "pairwise.complete.obs")
+cor_mat_control <- cor(datExpr_control_cluster5, method = "pearson", use = "pairwise.complete.obs")
 diag(cor_mat_control) <- 0
 hub_score_control <- rowSums(abs(cor_mat_control), na.rm = TRUE)
-names(hub_score_control) <- colnames(datExpr_control_cluster5_filt)
+names(hub_score_control) <- colnames(datExpr_control_cluster5)
 top10pct_hubs_control <- names(sort(hub_score_control, decreasing = TRUE))[1:ceiling(0.10 * length(hub_score_control))]
 top10pct_hubs_control_5 <- names(sort(hub_score_control, decreasing = TRUE))[1:ceiling(0.10 * length(hub_score_control))]
 
 # For treat30 group
-# Remove genes with zero variance
-var_genes <- apply(datExpr_treat30_cluster5, 2, function(x) var(x, na.rm = TRUE) > 0)
-datExpr_treat30_cluster5_filt <- datExpr_treat30_cluster5[, var_genes]
-
 cor_mat_treat30 <- cor(datExpr_treat30_cluster5, method = "pearson", use = "pairwise.complete.obs")
 diag(cor_mat_treat30) <- 0
 hub_score_treat30 <- rowSums(abs(cor_mat_treat30), na.rm = TRUE)
@@ -1158,10 +1082,6 @@ top10pct_hubs_treat30 <- names(sort(hub_score_treat30, decreasing = TRUE))[1:cei
 top10pct_hubs_treat30_5 <- names(sort(hub_score_treat30, decreasing = TRUE))[1:ceiling(0.10 * length(hub_score_treat30))]
 
 # For treat35 group 
-# Remove genes with zero variance
-var_genes <- apply(datExpr_treat35_cluster5, 2, function(x) var(x, na.rm = TRUE) > 0)
-datExpr_treat35_cluster5_filt <- datExpr_treat35_cluster5[, var_genes]
-
 cor_mat_treat35 <- cor(datExpr_treat35_cluster5, method = "pearson", use = "pairwise.complete.obs")
 diag(cor_mat_treat35) <- 0
 hub_score_treat35 <- rowSums(abs(cor_mat_treat35), na.rm = TRUE)
@@ -1376,22 +1296,14 @@ datExpr_treat35_cluster6 <- datExpr[treat35_samples, cluster6_genes]
 # Use sum of absolute correlations as a proxy for connectivity (ranks genes by their overall co-expression with all other genes in the module)
 
 # For control group
-# Remove genes with zero variance
-var_genes <- apply(datExpr_control_cluster6, 2, function(x) var(x, na.rm = TRUE) > 0)
-datExpr_control_cluster6_filt <- datExpr_control_cluster6[, var_genes]
-
-cor_mat_control <- cor(datExpr_control_cluster6_filt, method = "pearson", use = "pairwise.complete.obs")
+cor_mat_control <- cor(datExpr_control_cluster6, method = "pearson", use = "pairwise.complete.obs")
 diag(cor_mat_control) <- 0
 hub_score_control <- rowSums(abs(cor_mat_control), na.rm = TRUE)
-names(hub_score_control) <- colnames(datExpr_control_cluster6_filt)
+names(hub_score_control) <- colnames(datExpr_control_cluster6)
 top10pct_hubs_control <- names(sort(hub_score_control, decreasing = TRUE))[1:ceiling(0.10 * length(hub_score_control))]
 top10pct_hubs_control_6 <- names(sort(hub_score_control, decreasing = TRUE))[1:ceiling(0.10 * length(hub_score_control))]
 
 # For treat30 group
-# Remove genes with zero variance
-var_genes <- apply(datExpr_treat30_cluster6, 2, function(x) var(x, na.rm = TRUE) > 0)
-datExpr_treat30_cluster6_filt <- datExpr_treat30_cluster6[, var_genes]
-
 cor_mat_treat30 <- cor(datExpr_treat30_cluster6, method = "pearson", use = "pairwise.complete.obs")
 diag(cor_mat_treat30) <- 0
 hub_score_treat30 <- rowSums(abs(cor_mat_treat30), na.rm = TRUE)
@@ -1400,10 +1312,6 @@ top10pct_hubs_treat30 <- names(sort(hub_score_treat30, decreasing = TRUE))[1:cei
 top10pct_hubs_treat30_6 <- names(sort(hub_score_treat30, decreasing = TRUE))[1:ceiling(0.10 * length(hub_score_treat30))]
 
 # For treat35 group 
-# Remove genes with zero variance
-var_genes <- apply(datExpr_treat35_cluster6, 2, function(x) var(x, na.rm = TRUE) > 0)
-datExpr_treat35_cluster6_filt <- datExpr_treat35_cluster6[, var_genes]
-
 cor_mat_treat35 <- cor(datExpr_treat35_cluster6, method = "pearson", use = "pairwise.complete.obs")
 diag(cor_mat_treat35) <- 0
 hub_score_treat35 <- rowSums(abs(cor_mat_treat35), na.rm = TRUE)
@@ -1617,22 +1525,14 @@ datExpr_treat35_cluster8 <- datExpr[treat35_samples, cluster8_genes]
 # Use sum of absolute correlations as a proxy for connectivity (ranks genes by their overall co-expression with all other genes in the module)
 
 # For control group
-# Remove genes with zero variance
-var_genes <- apply(datExpr_control_cluster8, 2, function(x) var(x, na.rm = TRUE) > 0)
-datExpr_control_cluster8_filt <- datExpr_control_cluster8[, var_genes]
-
-cor_mat_control <- cor(datExpr_control_cluster8_filt, method = "pearson", use = "pairwise.complete.obs")
+cor_mat_control <- cor(datExpr_control_cluster8, method = "pearson", use = "pairwise.complete.obs")
 diag(cor_mat_control) <- 0
 hub_score_control <- rowSums(abs(cor_mat_control), na.rm = TRUE)
-names(hub_score_control) <- colnames(datExpr_control_cluster8_filt)
+names(hub_score_control) <- colnames(datExpr_control_cluster8)
 top10pct_hubs_control <- names(sort(hub_score_control, decreasing = TRUE))[1:ceiling(0.10 * length(hub_score_control))]
 top10pct_hubs_control_8 <- names(sort(hub_score_control, decreasing = TRUE))[1:ceiling(0.10 * length(hub_score_control))]
 
 # For treat30 group
-# Remove genes with zero variance
-var_genes <- apply(datExpr_treat30_cluster8, 2, function(x) var(x, na.rm = TRUE) > 0)
-datExpr_treat30_cluster8_filt <- datExpr_treat30_cluster8[, var_genes]
-
 cor_mat_treat30 <- cor(datExpr_treat30_cluster8, method = "pearson", use = "pairwise.complete.obs")
 diag(cor_mat_treat30) <- 0
 hub_score_treat30 <- rowSums(abs(cor_mat_treat30), na.rm = TRUE)
@@ -1641,10 +1541,6 @@ top10pct_hubs_treat30 <- names(sort(hub_score_treat30, decreasing = TRUE))[1:cei
 top10pct_hubs_treat30_8 <- names(sort(hub_score_treat30, decreasing = TRUE))[1:ceiling(0.10 * length(hub_score_treat30))]
 
 # For treat35 group 
-# Remove genes with zero variance
-var_genes <- apply(datExpr_treat35_cluster8, 2, function(x) var(x, na.rm = TRUE) > 0)
-datExpr_treat35_cluster8_filt <- datExpr_treat35_cluster8[, var_genes]
-
 cor_mat_treat35 <- cor(datExpr_treat35_cluster8, method = "pearson", use = "pairwise.complete.obs")
 diag(cor_mat_treat35) <- 0
 hub_score_treat35 <- rowSums(abs(cor_mat_treat35), na.rm = TRUE)
@@ -1857,22 +1753,14 @@ datExpr_treat35_cluster9 <- datExpr[treat35_samples, cluster9_genes]
 # Use sum of absolute correlations as a proxy for connectivity (ranks genes by their overall co-expression with all other genes in the module)
 
 # For control group
-# Remove genes with zero variance
-var_genes <- apply(datExpr_control_cluster9, 2, function(x) var(x, na.rm = TRUE) > 0)
-datExpr_control_cluster9_filt <- datExpr_control_cluster9[, var_genes]
-
-cor_mat_control <- cor(datExpr_control_cluster9_filt, method = "pearson", use = "pairwise.complete.obs")
+cor_mat_control <- cor(datExpr_control_cluster9, method = "pearson", use = "pairwise.complete.obs")
 diag(cor_mat_control) <- 0
 hub_score_control <- rowSums(abs(cor_mat_control), na.rm = TRUE)
-names(hub_score_control) <- colnames(datExpr_control_cluster9_filt)
+names(hub_score_control) <- colnames(datExpr_control_cluster9)
 top10pct_hubs_control <- names(sort(hub_score_control, decreasing = TRUE))[1:ceiling(0.10 * length(hub_score_control))]
 top10pct_hubs_control_9 <- names(sort(hub_score_control, decreasing = TRUE))[1:ceiling(0.10 * length(hub_score_control))]
 
 # For treat30 group
-# Remove genes with zero variance
-var_genes <- apply(datExpr_treat30_cluster9, 2, function(x) var(x, na.rm = TRUE) > 0)
-datExpr_treat30_cluster9_filt <- datExpr_treat30_cluster9[, var_genes]
-
 cor_mat_treat30 <- cor(datExpr_treat30_cluster9, method = "pearson", use = "pairwise.complete.obs")
 diag(cor_mat_treat30) <- 0
 hub_score_treat30 <- rowSums(abs(cor_mat_treat30), na.rm = TRUE)
@@ -1881,10 +1769,6 @@ top10pct_hubs_treat30 <- names(sort(hub_score_treat30, decreasing = TRUE))[1:cei
 top10pct_hubs_treat30_9 <- names(sort(hub_score_treat30, decreasing = TRUE))[1:ceiling(0.10 * length(hub_score_treat30))]
 
 # For treat35 group 
-# Remove genes with zero variance
-var_genes <- apply(datExpr_treat35_cluster9, 2, function(x) var(x, na.rm = TRUE) > 0)
-datExpr_treat35_cluster9_filt <- datExpr_treat35_cluster9[, var_genes]
-
 cor_mat_treat35 <- cor(datExpr_treat35_cluster9, method = "pearson", use = "pairwise.complete.obs")
 diag(cor_mat_treat35) <- 0
 hub_score_treat35 <- rowSums(abs(cor_mat_treat35), na.rm = TRUE)

@@ -1,10 +1,9 @@
 
-############# GWENA (Gene Whole co-Expression Network Analysis) #############
+############# WGCNA (Weighted Gene Co-expression Network Analysis) #############
+############# Pcom (Porites compressa) RNAseq data #############
+# Federica Scucchia June 2025
 
 ## load libraries
-# if (!requireNamespace("BiocManager", quietly=TRUE))
-#   install.packages("BiocManager")
-# BiocManager::install("GWENA")
 library("WGCNA")              #BiocManager::install("WGCNA", force = TRUE)
 library("flashClust")         #install.packages("flashClust")
 library("pheatmap")  
@@ -23,8 +22,6 @@ library("gridExtra")            #install.packages("gridExtra")
 #library("VennDiagram")          #install.packages("VennDiagram")
 library("patchwork")            #install.packages("patchwork")
 library("dplyr")
-# library(GWENA)
-# library(magrittr) # Not mandatory, we use the pipe `%>%` to ease readability.
 
 #treatment information
 treatmentinfo <- read.csv("RNAseq_Pcom_data.csv", header = TRUE, sep = ";")
@@ -107,11 +104,7 @@ PCA <- ggplot(gPCAdata, aes(PC1, PC2, color=temp)) +
 ggsave(file = "PCA_all_vst_Pcom.png", PCA)
 
 
-#### Compile GWENA/WGCNA Dataset
-
-# GWENA support expression matrix data coming from either RNA-seq or microarray experiments. 
-# Expression data have to be stored as text or spreadsheet files and formatted with genes as columns 
-# and samples as rows 
+#### Compile WGCNA Dataset
 
 #Transpose the filtered gene count matrix so that the gene IDs are rows and the sample IDs are columns.
 datExpr <- as.data.frame(t(assay(gvst))) #transpose to output to a new data frame with the column names as row names. And make all data numeric
@@ -140,109 +133,6 @@ nrow(datExpr)
 is_data_expr(datExpr)
 # $bool
 # [1] TRUE
-
-## Network building
-# Gene co-expression networks are an ensemble of genes (nodes) linked to each other (edges) 
-# according to the strength of their relation.
-#GWENA uses Spearman correlation by default. It is less sensitive to outliers which are 
-#frequent in transcriptomics datasets 
-
-# I will use a signed network because we have a relatively high softPower, according 
-# to >12 (https://peterlangfelder.com/2018/11/25/__trashed/). 
-# Moreover, in expression data where you are interested in when expression on one gene increases or decreases 
-# with expression level of another you would use a signed network (when you are interested in the direction of change, correlation and anti-correlation, you use a signed network).
-
-
-threads_to_use <- 12
-threads_to_use <- 14
-# net <- build_net(datExpr, cor_func = "spearman", 
-#                  n_threads = threads_to_use)
-
-net <- build_net(datExpr, 
-                 cor_func = "spearman", 
-                 n_threads = threads_to_use, 
-                 network_type = "signed") 
-
-net <- build_net(datExpr, 
-                 cor_func = "pearson", 
-                 n_threads = threads_to_use, 
-                 network_type = "signed") 
-
-
-# Power selected :
-net$metadata$power
-#18
-
-# Fit of the power law to data ($R^2$) :
-fit_power_table <- net$metadata$fit_power_table
-fit_power_table[fit_power_table$Power == net$metadata$power, "SFT.R.sq"]
-#0.7342994
-
-# Plot R^2 (SFT.R.sq) vs Power
-library(ggplot2)
-fit_power_table <- net$metadata$fit_power_table
-ggplot(fit_power_table, aes(x = Power, y = SFT.R.sq)) +
-  geom_line() +
-  geom_point() +
-  geom_hline(yintercept = 0.8, linetype = "dashed", color = "red") +
-  labs(title = "Scale-Free Topology Fit (R²) vs Power",
-       x = "Soft-thresholding Power",
-       y = "Scale-Free Topology Fit (R²)") +
-  theme_minimal()
-
-####  Modules detection
-# At this point, the network is a complete graph: all nodes are connected to all other nodes with different strengths. 
-# Because gene co-expression networks have a scale free property, groups of genes are strongly linked with one another. 
-# In co-expression networks these groups are called modules and assumed to be representative of genes working together to a 
-# common set of functions.
-
-modules <- detect_modules(datExpr, 
-                            net$network, 
-                            detailled_result = TRUE,
-                            merge_threshold = 0.25) #merge modules with >75% similarity 
-
-#Important: Module 0 contains all genes that did not fit into any modules.
-
-# Since this operation tends to create multiple smaller modules with highly similar expression profile 
-# (based on the eigengene of each), they are usually merged into one.
-
-# Number of modules before merging :
-length(unique(modules$modules_premerge))
-#> [1] 36
-# Number of modules after merging: 
-length(unique(modules$modules))
-#> [1] 4
-
-layout_mod_merge <- plot_modules_merge(
-  modules_premerge = modules$modules_premerge, 
-  modules_merged = modules$modules)
-
-#Resulting modules contain more genes whose repartition can be seen by a simple barplot.
-ggplot2::ggplot(data.frame(modules$modules %>% stack), 
-                ggplot2::aes(x = ind)) + ggplot2::stat_count() +
-  ggplot2::ylab("Number of genes") +
-  ggplot2::xlab("Module")
-
-#Each of the modules presents a distinct profile, which can be plotted in two figures to separate the positive (+ facet) and negative (- facet) correlations profile. As a summary of this profile, the eigengene (red line) is displayed to act as a signature.
-plot_expression_profiles(datExpr, modules$modules)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-########## WGCNA
 
 ### Network construction and consensus module detection
 # Choosing a soft-thresholding power: Analysis of network topology 
@@ -477,12 +367,12 @@ library(dendsort)
 row_dend = dendsort(hclust(dist(moduleTraitCor)))
 col_dend = dendsort(hclust(dist(t(moduleTraitCor))))
 
-pdf(file = "/work/pi_hputnam_uri_edu/fscucchia/20250424_ENCORE_HawaiiTPC_Federica/ENCORE_Hawaii_TPC_Rstudio/GWENA/Pcom/Module-trait-relationship-heatmap3.pdf", height = 11.5, width = 8)
+pdf(file = "/work/pi_hputnam_uri_edu/fscucchia/20250424_ENCORE_HawaiiTPC_Federica/ENCORE_Hawaii_TPC_Rstudio/GWENA/Pcom/Module-trait-relationship-heatmap_Pcom.pdf", height = 9, width = 8)
 ht=Heatmap(moduleTraitCor, name = "Module-Trait Eigengene Correlation", 
         col = blueWhiteRed(50), 
         row_names_side = "left", row_dend_side = "left",
         #width = unit(4, "in"), height = unit(8.5, "in"), 
-        column_order = 1:6, column_dend_reorder = FALSE, cluster_columns = hclust(dist(t(moduleTraitCor)), method = "average"), column_split = 3, column_dend_height = unit(0.2, "in"),
+        column_order = 1:6, column_dend_reorder = FALSE, cluster_columns = hclust(dist(t(moduleTraitCor)), method = "average"), column_split = 6, column_dend_height = unit(0.2, "in"),
         cluster_rows = METree, row_split = 10, row_gap = unit(2.5, "mm"), border = TRUE,
         cell_fun = function(j, i, x, y, w, h, col) {
         if(heatmappval[i, j] <= 0.05) {
@@ -696,6 +586,15 @@ plot(seg_fit1)
 # Residual standard error: 0.1067 on 18 degrees of freedom
 # Multiple R-Squared: 0.7679,  Adjusted R-squared: 0.7292 
 
+
+#compare models
+AIC(fit1, seg_fit1)
+#          df        AIC
+# fit1      3  -6.318496
+# seg_fit1  5 -30.438172
+#Lower AIC suggests the segmented model best fits the data
+
+
 ##  Get fitted values and confidence intervals
 # Get predicted values and confidence intervals
 library(segmented)
@@ -787,6 +686,15 @@ plot(seg_fit2)
 # Residual standard error: 0.1539 on 18 degrees of freedom
 # Multiple R-Squared: 0.2829,  Adjusted R-squared: 0.1633 
 
+
+#compare models
+AIC(fit2, seg_fit2)
+#          df       AIC
+# fit2      3 -12.16394
+# seg_fit2  5 -14.31118
+#Lower AIC suggests the segmented model best fits the data
+
+
 # Set up the bootstrap function
 # Function to fit segmented and predict at grid points
 boot_seg <- function(data, indices, grid_temp) {
@@ -873,6 +781,15 @@ plot(seg_fit3)
 # Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 # Residual standard error: 0.1126 on 18 degrees of freedom
 # Multiple R-Squared: 0.6151,  Adjusted R-squared: 0.5509 
+
+
+#compare models
+AIC(fit3, seg_fit3)
+#          df       AIC
+# fit3      3 -21.57335
+# seg_fit3  5 -28.08415
+#Lower AIC suggests the segmented model best fits the data
+
 
 # Set up the bootstrap function
 # Function to fit segmented and predict at grid points
@@ -964,6 +881,11 @@ plot(seg_fit4)
 # Residual standard error: 0.2185 on 18 degrees of freedom
 # Multiple R-Squared: 0.1409,  Adjusted R-squared: -0.002335 
 
+#compare models
+AIC(fit4, seg_fit4)
+#          df        AIC
+# fit4      3 -0.2044966
+# seg_fit4  5  1.0903499
 
 
 # Filter for the module of interest (e.g., cluster7)
@@ -1015,6 +937,13 @@ plot(seg_fit8)
 
 # Residual standard error: 0.1273 on 18 degrees of freedom
 # Multiple R-Squared: 0.5655,  Adjusted R-squared: 0.4931 
+
+#compare models
+AIC(fit8, seg_fit8)
+#          df        AIC
+# fit8      3 -12.77489
+# seg_fit8  5 -22.69031
+#Lower AIC suggests the segmented model best fits the data
 
 
 # Set up the bootstrap function
@@ -1109,6 +1038,15 @@ plot(seg_fit9)
 # Residual standard error: 0.1558 on 18 degrees of freedom
 # Multiple R-Squared: 0.5136,  Adjusted R-squared: 0.4325 
 
+
+#compare models
+AIC(fit9, seg_fit9)
+#          df        AIC
+# fit9      3  -5.665488
+# seg_fit9  5 -13.786105
+#Lower AIC suggests the segmented model best fits the data
+
+
 #Run the bootstrap
 set.seed(123)
 grid_temp <- seq(min(df_mod9$temp_num), max(df_mod9$temp_num), length.out = 200)
@@ -1185,6 +1123,13 @@ plot(seg_fit10)
 # Multiple R-Squared: 0.7197,  Adjusted R-squared: 0.673 
 
 #no break-point but The coefficient for temp_num is highly significant (t = -5.404, p = 3.9e-05), indicating a strong linear relationship between temperature and eigengene value across the full range.
+#compare models
+AIC(fit10, seg_fit10)
+#           df       AIC
+# fit10      3 -35.29462
+# seg_fit10  5 -33.50060
+#Lower AIC suggests the linera model best fits the data
+
 
 #Run the bootstrap
 set.seed(123)
@@ -1268,22 +1213,14 @@ datExpr_treat35_cluster1 <- datExpr[treat35_samples, cluster1_genes ]
 
 # Use sum of absolute correlations as a proxy for connectivity
 # For control group
-# Remove genes with zero variance
-var_genes <- apply(datExpr_control_cluster1, 2, function(x) var(x, na.rm = TRUE) > 0)
-datExpr_control_cluster1_filt <- datExpr_control_cluster1[, var_genes]
-
-cor_mat_control <- cor(datExpr_control_cluster1_filt, method = "pearson", use = "pairwise.complete.obs")
+cor_mat_control <- cor(datExpr_control_cluster1, method = "pearson", use = "pairwise.complete.obs")
 diag(cor_mat_control) <- 0
 hub_score_control <- rowSums(abs(cor_mat_control), na.rm = TRUE)
-names(hub_score_control) <- colnames(datExpr_control_cluster1_filt)
+names(hub_score_control) <- colnames(datExpr_control_cluster1)
 top10pct_hubs_control <- names(sort(hub_score_control, decreasing = TRUE))[1:ceiling(0.10 * length(hub_score_control))]
 top10pct_hubs_control_1 <- names(sort(hub_score_control, decreasing = TRUE))[1:ceiling(0.10 * length(hub_score_control))]
 
 # For treat30 group
-# Remove genes with zero variance
-var_genes <- apply(datExpr_treat30_cluster1, 2, function(x) var(x, na.rm = TRUE) > 0)
-datExpr_treat30_cluster1_filt <- datExpr_treat30_cluster1[, var_genes]
-
 cor_mat_treat30 <- cor(datExpr_treat30_cluster1, method = "pearson", use = "pairwise.complete.obs")
 diag(cor_mat_treat30) <- 0
 hub_score_treat30 <- rowSums(abs(cor_mat_treat30), na.rm = TRUE)
@@ -1292,10 +1229,6 @@ top10pct_hubs_treat30 <- names(sort(hub_score_treat30, decreasing = TRUE))[1:cei
 top10pct_hubs_treat30_1 <- names(sort(hub_score_treat30, decreasing = TRUE))[1:ceiling(0.10 * length(hub_score_treat30))]
 
 # For treat35 group 
-# Remove genes with zero variance
-var_genes <- apply(datExpr_treat35_cluster1, 2, function(x) var(x, na.rm = TRUE) > 0)
-datExpr_treat35_cluster1_filt <- datExpr_treat35_cluster1[, var_genes]
-
 cor_mat_treat35 <- cor(datExpr_treat35_cluster1, method = "pearson", use = "pairwise.complete.obs")
 diag(cor_mat_treat35) <- 0
 hub_score_treat35 <- rowSums(abs(cor_mat_treat35), na.rm = TRUE)
@@ -1460,22 +1393,14 @@ datExpr_treat35_cluster2 <- datExpr[treat35_samples, cluster2_genes ]
 
 # Use sum of absolute correlations as a proxy for connectivity
 # For control group
-# Remove genes with zero variance
-var_genes <- apply(datExpr_control_cluster2, 2, function(x) var(x, na.rm = TRUE) > 0)
-datExpr_control_cluster2_filt <- datExpr_control_cluster2[, var_genes]
-
-cor_mat_control <- cor(datExpr_control_cluster2_filt, method = "pearson", use = "pairwise.complete.obs")
+cor_mat_control <- cor(datExpr_control_cluster2, method = "pearson", use = "pairwise.complete.obs")
 diag(cor_mat_control) <- 0
 hub_score_control <- rowSums(abs(cor_mat_control), na.rm = TRUE)
-names(hub_score_control) <- colnames(datExpr_control_cluster2_filt)
+names(hub_score_control) <- colnames(datExpr_control_cluster2)
 top10pct_hubs_control <- names(sort(hub_score_control, decreasing = TRUE))[1:ceiling(0.10 * length(hub_score_control))]
 top10pct_hubs_control_2 <- names(sort(hub_score_control, decreasing = TRUE))[1:ceiling(0.10 * length(hub_score_control))]
 
 # For treat30 group
-# Remove genes with zero variance
-var_genes <- apply(datExpr_treat30_cluster2, 2, function(x) var(x, na.rm = TRUE) > 0)
-datExpr_treat30_cluster2_filt <- datExpr_treat30_cluster2[, var_genes]
-
 cor_mat_treat30 <- cor(datExpr_treat30_cluster2, method = "pearson", use = "pairwise.complete.obs")
 diag(cor_mat_treat30) <- 0
 hub_score_treat30 <- rowSums(abs(cor_mat_treat30), na.rm = TRUE)
@@ -1484,10 +1409,6 @@ top10pct_hubs_treat30 <- names(sort(hub_score_treat30, decreasing = TRUE))[1:cei
 top10pct_hubs_treat30_2 <- names(sort(hub_score_treat30, decreasing = TRUE))[1:ceiling(0.10 * length(hub_score_treat30))]
 
 # For treat35 group 
-# Remove genes with zero variance
-var_genes <- apply(datExpr_treat35_cluster2, 2, function(x) var(x, na.rm = TRUE) > 0)
-datExpr_treat35_cluster2_filt <- datExpr_treat35_cluster2[, var_genes]
-
 cor_mat_treat35 <- cor(datExpr_treat35_cluster2, method = "pearson", use = "pairwise.complete.obs")
 diag(cor_mat_treat35) <- 0
 hub_score_treat35 <- rowSums(abs(cor_mat_treat35), na.rm = TRUE)
@@ -1653,22 +1574,14 @@ datExpr_treat35_cluster3 <- datExpr[treat35_samples, cluster3_genes ]
 
 # Use sum of absolute correlations as a proxy for connectivity
 # For control group
-# Remove genes with zero variance
-var_genes <- apply(datExpr_control_cluster3, 2, function(x) var(x, na.rm = TRUE) > 0)
-datExpr_control_cluster3_filt <- datExpr_control_cluster3[, var_genes]
-
-cor_mat_control <- cor(datExpr_control_cluster3_filt, method = "pearson", use = "pairwise.complete.obs")
+cor_mat_control <- cor(datExpr_control_cluster3, method = "pearson", use = "pairwise.complete.obs")
 diag(cor_mat_control) <- 0
 hub_score_control <- rowSums(abs(cor_mat_control), na.rm = TRUE)
-names(hub_score_control) <- colnames(datExpr_control_cluster3_filt)
+names(hub_score_control) <- colnames(datExpr_control_cluster3)
 top10pct_hubs_control <- names(sort(hub_score_control, decreasing = TRUE))[1:ceiling(0.10 * length(hub_score_control))]
 top10pct_hubs_control_3 <- names(sort(hub_score_control, decreasing = TRUE))[1:ceiling(0.10 * length(hub_score_control))]
 
 # For treat30 group
-# Remove genes with zero variance
-var_genes <- apply(datExpr_treat30_cluster3, 2, function(x) var(x, na.rm = TRUE) > 0)
-datExpr_treat30_cluster3_filt <- datExpr_treat30_cluster3[, var_genes]
-
 cor_mat_treat30 <- cor(datExpr_treat30_cluster3, method = "pearson", use = "pairwise.complete.obs")
 diag(cor_mat_treat30) <- 0
 hub_score_treat30 <- rowSums(abs(cor_mat_treat30), na.rm = TRUE)
@@ -1677,10 +1590,6 @@ top10pct_hubs_treat30 <- names(sort(hub_score_treat30, decreasing = TRUE))[1:cei
 top10pct_hubs_treat30_3 <- names(sort(hub_score_treat30, decreasing = TRUE))[1:ceiling(0.10 * length(hub_score_treat30))]
 
 # For treat35 group 
-# Remove genes with zero variance
-var_genes <- apply(datExpr_treat35_cluster3, 2, function(x) var(x, na.rm = TRUE) > 0)
-datExpr_treat35_cluster3_filt <- datExpr_treat35_cluster3[, var_genes]
-
 cor_mat_treat35 <- cor(datExpr_treat35_cluster3, method = "pearson", use = "pairwise.complete.obs")
 diag(cor_mat_treat35) <- 0
 hub_score_treat35 <- rowSums(abs(cor_mat_treat35), na.rm = TRUE)
@@ -1846,22 +1755,14 @@ datExpr_treat35_cluster9 <- datExpr[treat35_samples, cluster9_genes ]
 
 # Use sum of absolute correlations as a proxy for connectivity
 # For control group
-# Remove genes with zero variance
-var_genes <- apply(datExpr_control_cluster9, 2, function(x) var(x, na.rm = TRUE) > 0)
-datExpr_control_cluster9_filt <- datExpr_control_cluster9[, var_genes]
-
-cor_mat_control <- cor(datExpr_control_cluster9_filt, method = "pearson", use = "pairwise.complete.obs")
+cor_mat_control <- cor(datExpr_control_cluster9, method = "pearson", use = "pairwise.complete.obs")
 diag(cor_mat_control) <- 0
 hub_score_control <- rowSums(abs(cor_mat_control), na.rm = TRUE)
-names(hub_score_control) <- colnames(datExpr_control_cluster9_filt)
+names(hub_score_control) <- colnames(datExpr_control_cluster9)
 top10pct_hubs_control <- names(sort(hub_score_control, decreasing = TRUE))[1:ceiling(0.10 * length(hub_score_control))]
 top10pct_hubs_control_9 <- names(sort(hub_score_control, decreasing = TRUE))[1:ceiling(0.10 * length(hub_score_control))]
 
 # For treat30 group
-# Remove genes with zero variance
-var_genes <- apply(datExpr_treat30_cluster9, 2, function(x) var(x, na.rm = TRUE) > 0)
-datExpr_treat30_cluster9_filt <- datExpr_treat30_cluster9[, var_genes]
-
 cor_mat_treat30 <- cor(datExpr_treat30_cluster9, method = "pearson", use = "pairwise.complete.obs")
 diag(cor_mat_treat30) <- 0
 hub_score_treat30 <- rowSums(abs(cor_mat_treat30), na.rm = TRUE)
@@ -1870,10 +1771,6 @@ top10pct_hubs_treat30 <- names(sort(hub_score_treat30, decreasing = TRUE))[1:cei
 top10pct_hubs_treat30_9 <- names(sort(hub_score_treat30, decreasing = TRUE))[1:ceiling(0.10 * length(hub_score_treat30))]
 
 # For treat35 group 
-# Remove genes with zero variance
-var_genes <- apply(datExpr_treat35_cluster9, 2, function(x) var(x, na.rm = TRUE) > 0)
-datExpr_treat35_cluster9_filt <- datExpr_treat35_cluster9[, var_genes]
-
 cor_mat_treat35 <- cor(datExpr_treat35_cluster9, method = "pearson", use = "pairwise.complete.obs")
 diag(cor_mat_treat35) <- 0
 hub_score_treat35 <- rowSums(abs(cor_mat_treat35), na.rm = TRUE)
@@ -2016,201 +1913,10 @@ bar9 <- ggplot(membership_summary, aes(x = "Cluster 9", y = Percent, fill = patt
 
 
 
-#### Export the network of a specific cluster - cluster10
-cluster10_modules <- c("salmon4", "plum", "orangered4", "red", "darkorange", "lightpink4")  # replace with your actual module colors for cluster10
-inCluster <- moduleColors %in% cluster10_modules
-cluster10_genes <- probes[inCluster] ##1885
-
-# Subset expression data for each group
-datExpr_control_cluster10 <- datExpr[control_samples, cluster10_genes ]
-datExpr_treat30_cluster10 <- datExpr[treat30_samples, cluster10_genes ]
-datExpr_treat35_cluster10 <- datExpr[treat35_samples, cluster10_genes ]
-
-# Calculate intramodular connectivity for for all genes in a cluster/module using only the genes in that module and only the samples for each condition
-# kWithin: sum of connection strengths with other module genes
-#add genes names to connectivity vectors
-# kWithin_control <- softConnectivity(datExpr_control_cluster10)
-# names(kWithin_control) <- colnames(datExpr_control_cluster10)
-# kWithin_treat30 <- softConnectivity(datExpr_treat30_cluster10)
-# names(kWithin_treat30) <- colnames(datExpr_treat30_cluster10)
-# kWithin_treat35 <- softConnectivity(datExpr_treat35_cluster10)
-# names(kWithin_treat35) <- colnames(datExpr_treat35_cluster10)
-
-# Use sum of absolute correlations as a proxy for connectivity
-# For control group
-# Remove genes with zero variance
-var_genes <- apply(datExpr_control_cluster10, 2, function(x) var(x, na.rm = TRUE) > 0)
-datExpr_control_cluster10_filt <- datExpr_control_cluster10[, var_genes]
-
-cor_mat_control <- cor(datExpr_control_cluster10_filt, method = "pearson", use = "pairwise.complete.obs")
-diag(cor_mat_control) <- 0
-hub_score_control <- rowSums(abs(cor_mat_control), na.rm = TRUE)
-names(hub_score_control) <- colnames(datExpr_control_cluster10_filt)
-top10pct_hubs_control <- names(sort(hub_score_control, decreasing = TRUE))[1:ceiling(0.10 * length(hub_score_control))]
-top10pct_hubs_control_10 <- names(sort(hub_score_control, decreasing = TRUE))[1:ceiling(0.10 * length(hub_score_control))]
-
-# For treat30 group
-# Remove genes with zero variance
-var_genes <- apply(datExpr_treat30_cluster10, 2, function(x) var(x, na.rm = TRUE) > 0)
-datExpr_treat30_cluster10_filt <- datExpr_treat30_cluster10[, var_genes]
-
-cor_mat_treat30 <- cor(datExpr_treat30_cluster10, method = "pearson", use = "pairwise.complete.obs")
-diag(cor_mat_treat30) <- 0
-hub_score_treat30 <- rowSums(abs(cor_mat_treat30), na.rm = TRUE)
-names(hub_score_treat30) <- colnames(datExpr_treat30_cluster10)
-top10pct_hubs_treat30 <- names(sort(hub_score_treat30, decreasing = TRUE))[1:ceiling(0.10 * length(hub_score_treat30))]
-top10pct_hubs_treat30_10 <- names(sort(hub_score_treat30, decreasing = TRUE))[1:ceiling(0.10 * length(hub_score_treat30))]
-
-# For treat35 group 
-# Remove genes with zero variance
-var_genes <- apply(datExpr_treat35_cluster10, 2, function(x) var(x, na.rm = TRUE) > 0)
-datExpr_treat35_cluster10_filt <- datExpr_treat35_cluster10[, var_genes]
-
-cor_mat_treat35 <- cor(datExpr_treat35_cluster10, method = "pearson", use = "pairwise.complete.obs")
-diag(cor_mat_treat35) <- 0
-hub_score_treat35 <- rowSums(abs(cor_mat_treat35), na.rm = TRUE)
-names(hub_score_treat35) <- colnames(datExpr_treat35_cluster10)
-top10pct_hubs_treat35 <- names(sort(hub_score_treat35, decreasing = TRUE))[1:ceiling(0.10 * length(hub_score_treat35))]
-top10pct_hubs_treat35_10 <- names(sort(hub_score_treat35, decreasing = TRUE))[1:ceiling(0.10 * length(hub_score_treat35))]
-
-# Save the top 10% hub genes as CSV files
-write.csv(data.frame(Gene = top10pct_hubs_control),
-          file = "top10pct_hub_genes_control_cluster10.csv", row.names = FALSE)
-write.csv(data.frame(Gene = top10pct_hubs_treat30),
-          file = "top10pct_hub_genes_treat30_cluster10.csv", row.names = FALSE)
-write.csv(data.frame(Gene = top10pct_hubs_treat35),
-          file = "top10pct_hub_genes_treat35_cluster10.csv", row.names = FALSE)
-
-#### Identify the top Hub Gene per cluster and temp
-
-# For control group
-top10pct_hubs_control <- names(sort(hub_score_control, decreasing = TRUE))[1:ceiling(0.10 * length(hub_score_control))]
-# Find the top hub gene among the top 10%
-top_hub_control <- top10pct_hubs_control[which.max(hub_score_control[top10pct_hubs_control])]
-
-# For treat30 group
-top10pct_hubs_treat30 <- names(sort(hub_score_treat30, decreasing = TRUE))[1:ceiling(0.10 * length(hub_score_treat30))]
-top_hub_treat30 <- top10pct_hubs_treat30[which.max(hub_score_treat30[top10pct_hubs_treat30])]
-
-# For treat35 group
-top10pct_hubs_treat35 <- names(sort(hub_score_treat35, decreasing = TRUE))[1:ceiling(0.10 * length(hub_score_treat35))]
-top_hub_treat35 <- top10pct_hubs_treat35[which.max(hub_score_treat35[top10pct_hubs_treat35])]
-
-cat("Top hub gene (control, top 10%):", top_hub_control, "\n")
-#Porites_compressa_HIv1___RNAseq.g12188.t1 
-cat("Top hub gene (treat30, top 10%):", top_hub_treat30, "\n")
-#Porites_compressa_HIv1___RNAseq.g5267.t1 
-cat("Top hub gene (treat35, top 10%):", top_hub_treat35, "\n")
-#Porites_compressa_HIv1___RNAseq.g5102.t1 
-
-
-#### Using the ggalluvial package to visualize the overlap of the top 10% hub genes in selected clusters for control, treat30, and 
-#### treat35.
-
-library(ggalluvial)
-library(dplyr)
-
-# All genes in cluster 5
-all_genes <- cluster10_genes
-
-# Build membership matrix
-membership <- data.frame(
-  Gene = all_genes,
-  Control = as.integer(all_genes %in% top10pct_hubs_control),
-  Treat30 = as.integer(all_genes %in% top10pct_hubs_treat30),
-  Treat35 = as.integer(all_genes %in% top10pct_hubs_treat35)
-)
-
-# Filter to keep only genes that are a hub in at least one condition
-membership <- membership %>%
-  filter(Control == 1 | Treat30 == 1 | Treat35 == 1)
-
-# Summarize overlap patterns
-membership_summary <- membership %>%
-  group_by(Control, Treat30, Treat35) %>%
-  summarise(Freq = n(), .groups = "drop") %>%
-  mutate(Cluster = "Cluster 10 Genes")
-
-# Create a label for each interaction pattern
-membership_summary$pattern <- interaction(membership_summary$Control, membership_summary$Treat30, membership_summary$Treat35)
-pattern_counts <- setNames(membership_summary$Freq, membership_summary$pattern)
-pattern_labels <- paste0(names(pattern_counts), " (n=", pattern_counts, ")")
-names(pattern_labels) <- names(pattern_counts)
-
-# Plot 
-ggplot(membership_summary,
-       aes(axis1 = Cluster,
-           axis2 = factor(Control, levels = c(0, 1), labels = c("Not Hub", "Hub")),
-           axis3 = factor(Treat30, levels = c(0, 1), labels = c("Not Hub", "Hub")),
-           axis4 = factor(Treat35, levels = c(0, 1), labels = c("Not Hub", "Hub")),
-           y = Freq)) +
-  geom_alluvium(aes(fill = pattern), width = 1/8, alpha = 0.8) +
-  geom_stratum(width = 1/6, fill = "grey80", color = "black") +
-  geom_text(stat = "stratum", aes(label = after_stat(stratum)), size = 4) +
-  scale_x_discrete(limits = c("Cluster", "Control", "Treat30", "Treat35"),
-                   labels = c("Cluster" = "Cluster 10 Genes",
-                              "Control" = "Control",
-                              "Treat30" = "Treat30",
-                              "Treat35" = "Treat35")) +
-  scale_fill_manual(
-    name = "Hub Pattern\n(Control.Treat30.Treat35)",
-    values = setNames(RColorBrewer::brewer.pal(length(pattern_labels), "Set2"), names(pattern_labels)),
-    labels = pattern_labels
-  ) +
-  theme_minimal() +
-  labs(title = "Cluster 10: Overlap of Top 10% Hub Genes Across Conditions",
-       y = "Number of Genes", x = "") +
-  theme(axis.text.y = element_blank(),
-        axis.ticks.y = element_blank())
-
-
-## bar plot
-library(dplyr)
-library(ggplot2)
-library(RColorBrewer)
-
-# Assume membership_summary and pattern_labels are already created as in your alluvial plot code
-
-# Calculate total number of unique hub genes across all conditions
-unique_hubs <- unique(c(top10pct_hubs_control, top10pct_hubs_treat30, top10pct_hubs_treat35))
-total_hubs <- length(unique_hubs)
-
-# Add percent column to membership_summary
-membership_summary <- membership_summary %>%
-  mutate(Percent = 100 * Freq / total_hubs)
-
-# For plotting, order patterns by frequency (optional)
-membership_summary$pattern <- factor(
-  membership_summary$pattern,
-  levels = membership_summary$pattern[order(-membership_summary$Freq)]
-)
-
-# Assign colors (same as alluvial)
-bar_colors <- setNames(RColorBrewer::brewer.pal(length(pattern_labels), "Set2"), names(pattern_labels))
-
-bar10 <- ggplot(membership_summary, aes(x = "Cluster 10", y = Percent, fill = pattern)) +
-  geom_bar(stat = "identity", width = 0.1, color = "black") +
-  scale_fill_manual(
-    name = "Hub Pattern\n(Control.Treat30.Treat35)",
-    values = bar_colors,
-    labels = pattern_labels
-  ) +
-  labs(
-    title = "Cluster 10: Distribution of Hub Gene Overlap Patterns",
-    x = "",
-    y = "Percent of Unique Hub Genes"
-  ) +
-  theme_minimal() +
-  theme(
-    axis.text.x = element_blank(),
-    axis.ticks.x = element_blank()
-  )
-
-
 
 ##### combine all bar plots into one figure
 library(patchwork)
-bar1 + bar2 + bar3 + bar9 + bar10
+bar1 + bar2 + bar3 + bar9
 
 
 ######## Make a global alluvial plot showing the overlap of all top 10% hub genes from all clusters across the three temperature groups
@@ -2220,19 +1926,18 @@ all_top_hubs <- unique(c(
   top10pct_hubs_control_1, top10pct_hubs_treat30_1, top10pct_hubs_treat35_1,
   top10pct_hubs_control_2, top10pct_hubs_treat30_2, top10pct_hubs_treat35_2,
   top10pct_hubs_control_3, top10pct_hubs_treat30_3, top10pct_hubs_treat35_3,
-  top10pct_hubs_control_9, top10pct_hubs_treat30_9, top10pct_hubs_treat35_9,
-  top10pct_hubs_control_10, top10pct_hubs_treat30_10, top10pct_hubs_treat35_10
+  top10pct_hubs_control_9, top10pct_hubs_treat30_9, top10pct_hubs_treat35_9
 ))
 
 # For each gene, check if it is a top hub in each group (any cluster)
 membership_global <- data.frame(
   Gene = all_top_hubs,
   Control = as.integer(all_top_hubs %in% c(
-    top10pct_hubs_control_1, top10pct_hubs_control_2, top10pct_hubs_control_3, top10pct_hubs_control_9, top10pct_hubs_control_10)),
+    top10pct_hubs_control_1, top10pct_hubs_control_2, top10pct_hubs_control_3, top10pct_hubs_control_9)),
   Treat30 = as.integer(all_top_hubs %in% c(
-    top10pct_hubs_treat30_1, top10pct_hubs_treat30_2, top10pct_hubs_treat30_3, top10pct_hubs_treat30_9, top10pct_hubs_treat30_10)),
+    top10pct_hubs_treat30_1, top10pct_hubs_treat30_2, top10pct_hubs_treat30_3, top10pct_hubs_treat30_9)),
   Treat35 = as.integer(all_top_hubs %in% c(
-    top10pct_hubs_treat35_1, top10pct_hubs_treat35_2, top10pct_hubs_treat35_3, top10pct_hubs_treat35_9, top10pct_hubs_treat35_10))
+    top10pct_hubs_treat35_1, top10pct_hubs_treat35_2, top10pct_hubs_treat35_3, top10pct_hubs_treat35_9))
 )
 
 
@@ -2273,7 +1978,7 @@ ggplot(membership_summary_global,
                               "Treat35" = "Treat35")) +
   scale_fill_brewer(type = "qual", palette = "Set2", name = "Pattern", labels = pattern_labels) +
   theme_minimal() +
-  labs(title = "Global Overlap of Top 10% Hub Genes Across Clusters 1,2,3,9,10 and Conditions",
+  labs(title = "Global Overlap of Top 10% Hub Genes Across Clusters 1,2,3,9 and Conditions",
        y = "Number of Genes", x = "") +
   theme(axis.text.y = element_blank(),
         axis.ticks.y = element_blank())
