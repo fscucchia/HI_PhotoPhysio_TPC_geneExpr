@@ -133,6 +133,11 @@ is_data_expr(datExpr)
 # $bool
 # [1] TRUE
 
+#### Save all genes for Viseago (enrichment analysis)
+# Extract gene names from column headers
+gene_names <- colnames(datExpr)
+# Save as background.txt (one gene per line, no header)
+writeLines(gene_names, "background.txt")
 
 ### Network construction and consensus module detection
 # Choosing a soft-thresholding power: Analysis of network topology 
@@ -1060,6 +1065,29 @@ membership_summary$pattern <- factor(
   levels = membership_summary$pattern[order(-membership_summary$Freq)]
 )
 
+
+# Save membership summary data for UpSet plot analysis
+blue_membership_summary <- membership_summary %>%
+  mutate(Species = "Pacu",
+         Cluster = "blue") %>%
+  select(Species, Cluster, Control, Treat30, Treat35, Freq, Percent, pattern)
+
+write.csv(blue_membership_summary, 
+          file = "Pacu_blue_membership_summary_for_upset.csv", 
+          row.names = FALSE)
+
+# Also save the individual gene membership data
+blue_gene_membership <- membership %>%
+  mutate(Species = "Pacu",
+         Cluster = "blue") %>%
+  select(Species, Cluster, Gene, Control, Treat30, Treat35)
+
+write.csv(blue_gene_membership, 
+          file = "Pacu_blue_gene_membership_for_upset.csv", 
+          row.names = FALSE)
+
+
+
 # Assign colors (same as alluvial)
 bar_colors <- setNames(RColorBrewer::brewer.pal(length(pattern_labels), "Set2"), names(pattern_labels))
 
@@ -1081,6 +1109,29 @@ barBlue <- ggplot(membership_summary, aes(x = "Blue", y = Percent, fill = patter
     axis.ticks.x = element_blank()
   )
 
+
+# Save hub genes data for UpSet plot analysis
+# Create a comprehensive data frame for blue module
+blue_hub_data <- data.frame(
+  Gene = c(top10pct_hubs_control, top10pct_hubs_treat30, top10pct_hubs_treat35),
+  Species = "Pacu",
+  Cluster = "blue",
+  Temperature = c(rep("Control", length(top10pct_hubs_control)),
+                  rep("Treat30", length(top10pct_hubs_treat30)),
+                  rep("Treat35", length(top10pct_hubs_treat35))),
+  Set_ID = c(paste0("Pacu_blue_Control"),
+             paste0("Pacu_blue_Treat30"), 
+             paste0("Pacu_blue_Treat35")),
+  stringsAsFactors = FALSE
+)
+
+# Remove duplicates (genes that appear in multiple conditions)
+blue_hub_data <- blue_hub_data[!duplicated(blue_hub_data[c("Gene", "Temperature")]), ]
+
+# Save to CSV for later UpSet analysis
+write.csv(blue_hub_data, 
+          file = "Pacu_blue_hub_genes_for_upset.csv", 
+          row.names = FALSE)
 
 
 
@@ -1220,7 +1271,7 @@ cat("Top hub gene (treat35, top 10%):", top_hub_treat35, "\n")
 library(ggalluvial)
 library(dplyr)
 
-# All genes in cluster 5
+# All genes in turquoise
 all_genes <- turquoise_genes
 
 # Build membership matrix
@@ -1294,6 +1345,29 @@ membership_summary$pattern <- factor(
   levels = membership_summary$pattern[order(-membership_summary$Freq)]
 )
 
+
+# Save membership summary data for UpSet plot analysis
+turquoise_membership_summary <- membership_summary %>%
+  mutate(Species = "Pacu",
+         Cluster = "turquoise") %>%
+  select(Species, Cluster, Control, Treat30, Treat35, Freq, Percent, pattern)
+
+write.csv(turquoise_membership_summary, 
+          file = "Pacu_turquoise_membership_summary_for_upset.csv", 
+          row.names = FALSE)
+
+# Also save the individual gene membership data
+turquoise_gene_membership <- membership %>%
+  mutate(Species = "Pacu",
+         Cluster = "turquoise") %>%
+  select(Species, Cluster, Gene, Control, Treat30, Treat35)
+
+write.csv(turquoise_gene_membership, 
+          file = "Pacu_turquoise_gene_membership_for_upset.csv", 
+          row.names = FALSE)
+
+
+
 # Assign colors (same as alluvial)
 bar_colors <- setNames(RColorBrewer::brewer.pal(length(pattern_labels), "Set2"), names(pattern_labels))
 
@@ -1314,6 +1388,31 @@ barTurquoise <- ggplot(membership_summary, aes(x = "Turquoise", y = Percent, fil
     axis.text.x = element_blank(),
     axis.ticks.x = element_blank()
   )
+
+
+# Save hub genes data for UpSet plot analysis
+# Create a comprehensive data frame for turquoise module
+turquoise_hub_data <- data.frame(
+  Gene = c(top10pct_hubs_control, top10pct_hubs_treat30, top10pct_hubs_treat35),
+  Species = "Pacu",
+  Cluster = "turquoise",
+  Temperature = c(rep("Control", length(top10pct_hubs_control)),
+                  rep("Treat30", length(top10pct_hubs_treat30)),
+                  rep("Treat35", length(top10pct_hubs_treat35))),
+  Set_ID = c(paste0("Pacu_turquoise_Control"),
+             paste0("Pacu_turquoise_Treat30"), 
+             paste0("Pacu_turquoise_Treat35")),
+  stringsAsFactors = FALSE
+)
+
+# Remove duplicates (genes that appear in multiple conditions)
+turquoise_hub_data <- turquoise_hub_data[!duplicated(turquoise_hub_data[c("Gene", "Temperature")]), ]
+
+# Save to CSV for later UpSet analysis
+write.csv(turquoise_hub_data, 
+          file = "Pacu_turquoise_hub_genes_for_upset.csv", 
+          row.names = FALSE)
+
 
 
 ##### combine all bar plots into one figure
@@ -1453,6 +1552,75 @@ cat("Jaccard index (all blue genes):", jaccard_index, "\n")
 #Jaccard index (all blue genes): 0.4331329 ##35
 cat("Jaccard index (all turquoise genes):", jaccard_index, "\n")
 #Jaccard index (all turquoise genes): 0.3083096 ##35
+
+
+
+########### Jaccard for all tempratures compared to control
+
+#Define modules and temperature groups
+modules <- list(
+  blue = blue_genes,
+  turquoise = turquoise_genes
+)
+
+temp_groups <- c("tt12", "tt18", "tt25", "tt30", "tt35")
+control_group <- "tt26.8"
+
+#Loop over clusters and temperatures
+# Prepare results table
+jaccard_results <- data.frame(
+  Module = character(),
+  Temp = character(),
+  Jaccard = numeric(),
+  Shared_Edges = integer(),
+  All_Edges = integer(),
+  stringsAsFactors = FALSE
+)
+
+edge_threshold <- 0.6
+
+for (mod_name in names(modules)) {
+  genes <- modules[[mod_name]]
+  
+  # Subset expression data for control
+  datExpr_control <- datExpr[which(treatmentinfo$temp == control_group), genes]
+  adj_control <- abs(cor(datExpr_control, method = "pearson"))
+  adj_control_bin <- (adj_control > edge_threshold)
+  diag(adj_control_bin) <- 0
+  adj_control_bin <- adj_control_bin | t(adj_control_bin)
+  adj_control_bin[is.na(adj_control_bin)] <- FALSE
+  edges_control <- which(adj_control_bin & upper.tri(adj_control_bin), arr.ind = TRUE)
+  edges_control_set <- paste(edges_control[,1], edges_control[,2], sep = "-")
+  
+  for (temp in temp_groups) {
+    datExpr_temp <- datExpr[which(treatmentinfo$temp == temp), genes]
+    adj_temp <- abs(cor(datExpr_temp, method = "pearson"))
+    adj_temp_bin <- (adj_temp > edge_threshold)
+    diag(adj_temp_bin) <- 0
+    adj_temp_bin <- adj_temp_bin | t(adj_temp_bin)
+    adj_temp_bin[is.na(adj_temp_bin)] <- FALSE
+    edges_temp <- which(adj_temp_bin & upper.tri(adj_temp_bin), arr.ind = TRUE)
+    edges_temp_set <- paste(edges_temp[,1], edges_temp[,2], sep = "-")
+    
+    shared_edges <- intersect(edges_control_set, edges_temp_set)
+    all_edges <- union(edges_control_set, edges_temp_set)
+    jaccard_index <- if(length(all_edges) > 0) length(shared_edges) / length(all_edges) else NA
+    
+    # Add to results table
+    jaccard_results <- rbind(jaccard_results, data.frame(
+      Module = mod_name,
+      Temp = temp,
+      Jaccard = jaccard_index,
+      Shared_Edges = length(shared_edges),
+      All_Edges = length(all_edges)
+    ))
+  }
+}
+
+write.csv(jaccard_results, "jaccard_index_all_modules_temps_t06_Pacu.csv", row.names = FALSE)
+
+
+
 
 
 

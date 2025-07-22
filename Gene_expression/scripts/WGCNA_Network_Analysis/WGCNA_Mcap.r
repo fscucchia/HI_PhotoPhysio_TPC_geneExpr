@@ -126,6 +126,13 @@ ncol(datExpr)
 nrow(datExpr)
 #> [1] 24
 
+#### Save all genes for Viseago (enrichment analysis)
+# Extract gene names from column headers
+gene_names <- colnames(datExpr)
+# Save as background.txt (one gene per line, no header)
+writeLines(gene_names, "background.txt")
+
+
 ### Network construction and consensus module detection
 # Choosing a soft-thresholding power: Analysis of network topology 
 # The soft thresholding power is the number to which the co-expression similarity is raised to calculate adjacency. 
@@ -1248,6 +1255,26 @@ membership_summary$pattern <- factor(
   levels = membership_summary$pattern[order(-membership_summary$Freq)]
 )
 
+# Save membership summary data for UpSet plot analysis
+cluster5_membership_summary <- membership_summary %>%
+  mutate(Species = "Mcap",
+         Cluster = "Cluster5") %>%
+  select(Species, Cluster, Control, Treat30, Treat35, Freq, Percent, pattern)
+
+write.csv(cluster5_membership_summary, 
+          file = "Mcap_Cluster5_membership_summary_for_upset.csv", 
+          row.names = FALSE)
+
+# Also save the individual gene membership data
+cluster5_gene_membership <- membership %>%
+  mutate(Species = "Mcap",
+         Cluster = "Cluster5") %>%
+  select(Species, Cluster, Gene, Control, Treat30, Treat35)
+
+write.csv(cluster5_gene_membership, 
+          file = "Mcap_Cluster5_gene_membership_for_upset.csv", 
+          row.names = FALSE)
+
 # Assign colors (same as alluvial)
 bar_colors <- setNames(RColorBrewer::brewer.pal(length(pattern_labels), "Set2"), names(pattern_labels))
 
@@ -1268,6 +1295,34 @@ bar5 <- ggplot(membership_summary, aes(x = "Cluster 5", y = Percent, fill = patt
     axis.text.x = element_blank(),
     axis.ticks.x = element_blank()
   )
+
+
+# Save hub genes data for UpSet plot analysis
+# Create a comprehensive data frame for cluster 5
+cluster5_hub_data <- data.frame(
+  Gene = c(top10pct_hubs_control, top10pct_hubs_treat30, top10pct_hubs_treat35),
+  Species = "Mcap",
+  Cluster = "Cluster5",
+  Temperature = c(rep("Control", length(top10pct_hubs_control)),
+                  rep("Treat30", length(top10pct_hubs_treat30)),
+                  rep("Treat35", length(top10pct_hubs_treat35))),
+  Set_ID = c(paste0("Mcap_Cluster5_Control"),
+             paste0("Mcap_Cluster5_Treat30"), 
+             paste0("Mcap_Cluster5_Treat35")),
+  stringsAsFactors = FALSE
+)
+
+# Remove duplicates (genes that appear in multiple conditions)
+cluster5_hub_data <- cluster5_hub_data[!duplicated(cluster5_hub_data[c("Gene", "Temperature")]), ]
+
+# Save to CSV for later UpSet analysis
+write.csv(cluster5_hub_data, 
+          file = "Mcap_Cluster5_hub_genes_for_upset.csv", 
+          row.names = FALSE)
+
+
+
+
 
 
 #### Export the network of a specific cluster - cluster6
@@ -1326,6 +1381,29 @@ write.csv(data.frame(Gene = top10pct_hubs_treat30),
           file = "top10pct_hub_genes_treat30_cluster6_2.csv", row.names = FALSE)
 write.csv(data.frame(Gene = top10pct_hubs_treat35),
           file = "top10pct_hub_genes_treat35_cluster6_2.csv", row.names = FALSE)
+
+# Save hub genes data for UpSet plot analysis
+# Create a comprehensive data frame for cluster 6
+cluster6_hub_data <- data.frame(
+  Gene = c(top10pct_hubs_control, top10pct_hubs_treat30, top10pct_hubs_treat35),
+  Species = "Mcap",
+  Cluster = "Cluster6",
+  Temperature = c(rep("Control", length(top10pct_hubs_control)),
+                  rep("Treat30", length(top10pct_hubs_treat30)),
+                  rep("Treat35", length(top10pct_hubs_treat35))),
+  Set_ID = c(paste0("Mcap_Cluster6_Control"),
+             paste0("Mcap_Cluster6_Treat30"), 
+             paste0("Mcap_Cluster6_Treat35")),
+  stringsAsFactors = FALSE
+)
+
+# Remove duplicates (genes that appear in multiple conditions)
+cluster6_hub_data <- cluster6_hub_data[!duplicated(cluster6_hub_data[c("Gene", "Temperature")]), ]
+
+# Save to CSV for later UpSet analysis
+write.csv(cluster6_hub_data, 
+          file = "Mcap_Cluster6_hub_genes_for_upset.csv", 
+          row.names = FALSE)
 
 
 #### Identify the top Hub Gene per cluster and temp
@@ -1703,6 +1781,27 @@ membership_summary$pattern <- factor(
   levels = membership_summary$pattern[order(-membership_summary$Freq)]
 )
 
+# Save membership summary data for UpSet plot analysis
+cluster8_membership_summary <- membership_summary %>%
+  mutate(Species = "Mcap",
+         Cluster = "Cluster8") %>%
+  select(Species, Cluster, Control, Treat30, Treat35, Freq, Percent, pattern)
+
+write.csv(cluster8_membership_summary, 
+          file = "Mcap_Cluster8_membership_summary_for_upset.csv", 
+          row.names = FALSE)
+
+# Also save the individual gene membership data
+cluster8_gene_membership <- membership %>%
+  mutate(Species = "Mcap",
+         Cluster = "Cluster8") %>%
+  select(Species, Cluster, Gene, Control, Treat30, Treat35)
+
+write.csv(cluster8_gene_membership, 
+          file = "Mcap_Cluster8_gene_membership_for_upset.csv", 
+          row.names = FALSE)
+
+
 # Assign colors (same as alluvial)
 bar_colors <- setNames(RColorBrewer::brewer.pal(length(pattern_labels), "Set2"), names(pattern_labels))
 
@@ -1723,6 +1822,30 @@ bar8 <- ggplot(membership_summary, aes(x = "Cluster 8", y = Percent, fill = patt
     axis.text.x = element_blank(),
     axis.ticks.x = element_blank()
   )
+
+
+# Save hub genes data for UpSet plot analysis
+# Create a comprehensive data frame for cluster 8
+cluster8_hub_data <- data.frame(
+  Gene = c(top10pct_hubs_control, top10pct_hubs_treat30, top10pct_hubs_treat35),
+  Species = "Mcap",
+  Cluster = "Cluster8",
+  Temperature = c(rep("Control", length(top10pct_hubs_control)),
+                  rep("Treat30", length(top10pct_hubs_treat30)),
+                  rep("Treat35", length(top10pct_hubs_treat35))),
+  Set_ID = c(paste0("Mcap_Cluster8_Control"),
+             paste0("Mcap_Cluster8_Treat30"), 
+             paste0("Mcap_Cluster8_Treat35")),
+  stringsAsFactors = FALSE
+)
+
+# Remove duplicates (genes that appear in multiple conditions)
+cluster8_hub_data <- cluster8_hub_data[!duplicated(cluster8_hub_data[c("Gene", "Temperature")]), ]
+
+# Save to CSV for later UpSet analysis
+write.csv(cluster8_hub_data, 
+          file = "Mcap_Cluster8_hub_genes_for_upset.csv", 
+          row.names = FALSE)
 
 
 
@@ -1932,6 +2055,28 @@ membership_summary$pattern <- factor(
   levels = membership_summary$pattern[order(-membership_summary$Freq)]
 )
 
+
+# Save membership summary data for UpSet plot analysis
+cluster9_membership_summary <- membership_summary %>%
+  mutate(Species = "Mcap",
+         Cluster = "Cluster9") %>%
+  select(Species, Cluster, Control, Treat30, Treat35, Freq, Percent, pattern)
+
+write.csv(cluster9_membership_summary, 
+          file = "Mcap_Cluster9_membership_summary_for_upset.csv", 
+          row.names = FALSE)
+
+# Also save the individual gene membership data
+cluster9_gene_membership <- membership %>%
+  mutate(Species = "Mcap",
+         Cluster = "Cluster9") %>%
+  select(Species, Cluster, Gene, Control, Treat30, Treat35)
+
+write.csv(cluster9_gene_membership, 
+          file = "Mcap_Cluster9_gene_membership_for_upset.csv", 
+          row.names = FALSE)
+
+
 # Assign colors (same as alluvial)
 bar_colors <- setNames(RColorBrewer::brewer.pal(length(pattern_labels), "Set2"), names(pattern_labels))
 
@@ -1952,6 +2097,34 @@ bar9 <- ggplot(membership_summary, aes(x = "Cluster 9", y = Percent, fill = patt
     axis.text.x = element_blank(),
     axis.ticks.x = element_blank()
   )
+
+
+# Save hub genes data for UpSet plot analysis
+# Create a comprehensive data frame for cluster 9
+cluster9_hub_data <- data.frame(
+  Gene = c(top10pct_hubs_control, top10pct_hubs_treat30, top10pct_hubs_treat35),
+  Species = "Mcap",
+  Cluster = "Cluster9",
+  Temperature = c(rep("Control", length(top10pct_hubs_control)),
+                  rep("Treat30", length(top10pct_hubs_treat30)),
+                  rep("Treat35", length(top10pct_hubs_treat35))),
+  Set_ID = c(paste0("Mcap_Cluster9_Control"),
+             paste0("Mcap_Cluster9_Treat30"), 
+             paste0("Mcap_Cluster9_Treat35")),
+  stringsAsFactors = FALSE
+)
+
+# Remove duplicates (genes that appear in multiple conditions)
+cluster9_hub_data <- cluster9_hub_data[!duplicated(cluster9_hub_data[c("Gene", "Temperature")]), ]
+
+# Save to CSV for later UpSet analysis
+write.csv(cluster9_hub_data, 
+          file = "Mcap_Cluster9_hub_genes_for_upset.csv", 
+          row.names = FALSE)
+
+
+
+
 
 ##### combine all bar plots into one figure
 library(patchwork)
@@ -2113,6 +2286,79 @@ all_edges <- union(edges_control_set, edges_treat35_set)
 jaccard_index <- length(shared_edges) / length(all_edges)
 cat("Jaccard index (all cluster genes):", jaccard_index, "\n")
 #Jaccard index ........................ ##35
+
+
+########### Jaccard for all tempratures compared to control
+
+#Define clusters and temperature groups
+clusters <- list(
+  cluster5 = cluster5_genes,
+  cluster8 = cluster8_genes,
+  cluster9 = cluster9_genes
+)
+
+temp_groups <- c("t12", "t18", "t25", "t30", "t35")
+control_group <- "t26.8"
+
+#Loop over clusters and temperatures
+# Prepare results table
+jaccard_results <- data.frame(
+  Cluster = character(),
+  Temp = character(),
+  Jaccard = numeric(),
+  Shared_Edges = integer(),
+  All_Edges = integer(),
+  stringsAsFactors = FALSE
+)
+
+edge_threshold <- 0.6
+
+for (clust_name in names(clusters)) {
+  genes <- clusters[[clust_name]]
+  
+  # Subset expression data for control
+  datExpr_control <- datExpr[which(treatmentinfo$temp == control_group), genes]
+  adj_control <- abs(cor(datExpr_control, method = "pearson"))
+  adj_control_bin <- (adj_control > edge_threshold)
+  diag(adj_control_bin) <- 0
+  adj_control_bin <- adj_control_bin | t(adj_control_bin)
+  adj_control_bin[is.na(adj_control_bin)] <- FALSE
+  edges_control <- which(adj_control_bin & upper.tri(adj_control_bin), arr.ind = TRUE)
+  edges_control_set <- paste(edges_control[,1], edges_control[,2], sep = "-")
+  
+  for (temp in temp_groups) {
+    datExpr_temp <- datExpr[which(treatmentinfo$temp == temp), genes]
+    adj_temp <- abs(cor(datExpr_temp, method = "pearson"))
+    adj_temp_bin <- (adj_temp > edge_threshold)
+    diag(adj_temp_bin) <- 0
+    adj_temp_bin <- adj_temp_bin | t(adj_temp_bin)
+    adj_temp_bin[is.na(adj_temp_bin)] <- FALSE
+    edges_temp <- which(adj_temp_bin & upper.tri(adj_temp_bin), arr.ind = TRUE)
+    edges_temp_set <- paste(edges_temp[,1], edges_temp[,2], sep = "-")
+    
+    shared_edges <- intersect(edges_control_set, edges_temp_set)
+    all_edges <- union(edges_control_set, edges_temp_set)
+    jaccard_index <- if(length(all_edges) > 0) length(shared_edges) / length(all_edges) else NA
+    
+    # Add to results table
+    jaccard_results <- rbind(jaccard_results, data.frame(
+      Cluster = clust_name,
+      Temp = temp,
+      Jaccard = jaccard_index,
+      Shared_Edges = length(shared_edges),
+      All_Edges = length(all_edges)
+    ))
+  }
+}
+
+# Save results
+write.csv(jaccard_results, "jaccard_index_all_clusters_temps_t06_Mcap.csv", row.names = FALSE)
+
+
+
+
+
+
 
 
 
@@ -2289,3 +2535,81 @@ cluster9_counts_t$gene_id <- rownames(cluster9_counts_t)
 cluster9_counts_t <- cluster9_counts_t[, c(ncol(cluster9_counts_t), 1:(ncol(cluster9_counts_t)-1))]
 # Save as CSV
 write.csv(cluster9_counts_t, file = "cluster9_gene_counts.csv", row.names = FALSE)
+
+
+
+##### save cluster gene lists for GO enrichment analysis with GO_MWU
+
+# All genes in your background (e.g., all columns of datExpr)
+all_genes <- colnames(datExpr)
+
+# cluster 5
+genes_in_cluster5 <- colnames(datExpr)[moduleColors %in% cluster5_modules]
+
+# kME values for cluster 5 genes (mean across modules in the cluster)
+kME_cluster5 <- t(moduleGeneCor[modules_in_cluster5, genes_in_cluster5, drop = FALSE])
+kME_cluster5_df <- as.data.frame(kME_cluster5)
+kME_cluster5_df$gene_id <- rownames(kME_cluster5_df)
+kME_cols <- c("MElightcyan", "MEorange", "MEblue", "MEsalmon")
+kME_cluster5_df$kME_mean <- apply(kME_cluster5_df[, kME_cols], 1, mean, na.rm = TRUE)
+
+# Create a named vector of kME values for cluster 5 genes
+kME_vec <- setNames(kME_cluster5_df$kME_mean, kME_cluster5_df$gene_id)
+
+# For all genes, assign kME if in cluster 5, else 0
+kME_for_all <- ifelse(all_genes %in% names(kME_vec), kME_vec[all_genes], 0)
+
+# Create data frame for GO_MWU
+GO_MWU_input <- data.frame(gene_id = all_genes, kME = kME_for_all)
+
+# Save as tab-delimited, no header, no quotes
+write.table(
+  kME_cluster5_df[, c("gene_id", "kME_mean")],
+  "kME_cluster5_mean.csv",
+  sep = ",", row.names = FALSE, col.names = FALSE, quote = FALSE
+)
+
+# cluster 8
+genes_in_cluster8 <- colnames(datExpr)[moduleColors %in% cluster8_modules]
+# kME values for cluster 8 genes (mean across modules in the cluster)
+kME_cluster8 <- t(moduleGeneCor[modules_in_cluster8, genes_in_cluster8, drop = FALSE])
+kME_cluster8_df <- as.data.frame(kME_cluster8)
+kME_cluster8_df$gene_id <- rownames(kME_cluster8_df)
+write.table(
+  kME_cluster8_df[, c("gene_id", "MEturquoise")],
+  "kME_cluster8.csv",
+  sep = ",", row.names = FALSE, col.names = FALSE, quote = FALSE
+)
+
+
+# cluster 9
+genes_in_cluster9 <- colnames(datExpr)[moduleColors %in% cluster9_modules]
+# kME values for cluster 9 genes (mean across modules in the cluster)
+kME_cluster9 <- t(moduleGeneCor[modules_in_cluster9, genes_in_cluster9, drop = FALSE])
+kME_cluster9_df <- as.data.frame(kME_cluster9)
+kME_cluster9_df$gene_id <- rownames(kME_cluster9_df)
+kME_cols <- c("MEdarkgreen", "MEyellow", "MEbisque4", "MEgrey60")
+kME_cluster9_df$kME_mean <- apply(kME_cluster9_df[, kME_cols], 1, mean, na.rm = TRUE)
+
+# Create a named vector of kME values for cluster 9 genes
+kME_vec <- setNames(kME_cluster9_df$kME_mean, kME_cluster9_df$gene_id)
+
+# For all genes, assign kME if in cluster 9, else 0
+kME_for_all <- ifelse(all_genes %in% names(kME_vec), kME_vec[all_genes], 0)
+
+# Create data frame for GO_MWU
+GO_MWU_input <- data.frame(gene_id = all_genes, kME = kME_for_all)
+
+# Save as tab-delimited, no header, no quotes
+write.table(
+  kME_cluster9_df[, c("gene_id", "kME_mean")],
+  "kME_cluster9_mean.csv",
+  sep = ",", row.names = FALSE, col.names = FALSE, quote = FALSE
+)
+
+
+
+
+
+
+
