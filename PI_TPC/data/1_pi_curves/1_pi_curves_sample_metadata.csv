@@ -1,0 +1,282 @@
+Date,colony_id,Chamber.Channel,Position,Bin.ID,Run,Species,Temp.Cat,Chamber.Vol.L,Notes
+20230921,MCAP-G1,1,1,1,1,Montipora capitata,18,372,NA
+20230921,PACT-D1,2,1,1,1,Pocillopora acuta,18,345,NA
+20230921,MCAP-H1,3,1,1,1,Montipora capitata,18,359,NA
+20230921,MCAP-B1,4,1,1,1,Montipora capitata,18,348,NA
+20230921,PACT-B1,5,1,1,1,Pocillopora acuta,18,350,NA
+20230921,PACT-A1,6,1,1,1,Pocillopora acuta,18,367,coral fell off plug
+20230921,PCOM-C1,7,1,1,1,Porites compressa,18,342,NA
+20230921,PCOM-G1,8,1,1,1,Porites compressa,18,344,NA
+20230921,PCOM-B1,9,1,1,1,Porites compressa,18,370,NA
+20230921,MCAP-E1,10,1,1,1,Montipora capitata,18,336,NA
+20230921,BK-1,11,1,1,1,Blank,18,358,NA
+20230921,PCOM-E1,12,1,1,1,Porites compressa,18,355,NA
+20230921,PACT-G1,13,1,1,1,Pocillopora acuta,18,352,NA
+20230921,MCAP-D1,14,1,1,1,Montipora capitata,18,360,NA
+20230921,PCOM-H1,15,1,1,1,Porites compressa,18,344,NA
+20230921,PACT-H1,16,1,1,1,Pocillopora acuta,18,353,NA
+20230921,PCOM-A1,17,1,1,1,Porites compressa,18,372,NA
+20230921,PACT-C1,18,1,1,1,Pocillopora acuta,18,369,chamber bottom double glued reflecting
+20230921,MCAP-F1,19,1,1,1,Montipora capitata,18,351,NA
+20230921,BK-2,20,1,1,1,Blank,18,353,NA
+20230922,PACT-A2,1,1,1,2,Pocillopora acuta,28,376,NA
+20230922,PACT-B2,2,1,1,2,Pocillopora acuta,28,370,NA
+20230922,BK-3,3,1,1,2,Blank,28,376,NA
+20230922,PCOM-B2,4,1,1,2,Porites compressa,28,370,NA
+20230922,MCAP-A2,5,1,1,2,Montipora capitata,28,348,NA
+20230922,PACT-F2,6,1,1,2,Pocillopora acuta,28,370,NA
+20230922,PCOM-D2,7,1,1,2,Porites compressa,28,362,NA
+20230922,MCAP-H2,8,1,1,2,Montipora capitata,28,368,NA
+20230922,PCOM-G2,9,1,1,2,Porites compressa,28,371,NA
+20230922,MCAP-G2,10,1,1,2,Montipora capitata,28,360,NA
+20230922,PACT-C2,11,1,1,2,Pocillopora acuta,28,368,NA
+20230922,PCOM-C2,12,1,1,2,Porites compressa,28,362,NA
+20230922,BK-4,13,1,1,2,Blank,28,375,NA
+20230922,PACT-D2,14,1,1,2,Pocillopora acuta,28,369,NA
+20230922,MCAP-C2,15,1,1,2,Montipora capitata,28,370,NA
+20230922,PCOM-E2,16,1,1,2,Porites compressa,28,369,NA
+20230922,MCAP-B2,17,1,1,2,Montipora capitata,28,363,NA
+20230922,PACT-E2,18,1,1,2,Pocillopora acuta,28,360,NA
+20230922,MCAP-D2,19,1,1,2,Montipora capitata,28,365,NA
+20230922,PCOM-A2,20,1,1,2,Porites compressa,28,362,NA
+20230922,PCOM-H2,1,1,1,3,Porites compressa,28,373,NA
+20230922,BK-5,2,1,1,3,Blank,28,368,NA
+20230922,PACT-G2,3,1,1,3,Pocillopora acuta,28,364,NA
+20230922,MCAP-F2,4,1,1,3,Montipora capitata,28,364,NA
+20230922,BK-6,5,1,1,3,Blank,28,372,NA
+20230922,MCAP-E2,6,1,1,3,Montipora capitata,28,357,NA
+20230922,PCOM-F2,7,1,1,3,Porites compressa,28,357,NA
+20230922,PACT-H2,8,1,1,3,Pocillopora acuta,28,362,NA
+20230922,PACT-F1,1,1,1,4,Pocillopora acuta,18,367,NA
+20230922,MCAP-C1,2,1,1,4,Montipora capitata,18,363,NA
+20230922,BK-7,3,1,1,4,Blank,18,373,NA
+20230922,PCOM-F1,4,1,1,4,Porites compressa,18,366,NA
+20230922,BK-8,5,1,1,4,Blank,18,378,NA
+20230922,MCAP-A1,6,1,1,4,Montipora capitata,18,364,NA
+20230922,PACT-E1,7,1,1,4,Pocillopora acuta,18,364,NA
+20230922,PCOM-D1,8,1,1,4,Porites compressa,18,368,NA
+20230923,PACT-F3,1,1,1,5,Pocillopora acuta,40,370,NA
+20230923,PCOM-A3,2,1,1,5,Porites compressa,40,358,NA
+20230923,MCAP-G3,3,1,1,5,Montipora capitata,40,364,NA
+20230923,BK-9,4,1,1,5,Blank,40,366,NA
+20230923,PACT-C3,5,1,1,5,Pocillopora acuta,40,364,NA
+20230923,PCOM-H3,6,1,1,5,Porites compressa,40,361,NA
+20230923,PCOM-D3,7,1,1,5,Porites compressa,40,366,NA
+20230923,PCOM-E3,8,1,1,5,Porites compressa,40,370,NA
+20230923,MCAP-D3,9,1,1,5,Montipora capitata,40,368,NA
+20230923,PACT-B3,10,1,1,5,Pocillopora acuta,40,367,NA
+20230923,MCAP-C3,11,1,1,5,Montipora capitata,40,366,NA
+20230923,BK-10,12,1,1,5,Blank,40,372,NA
+20230923,MCAP-H3,13,1,1,5,Montipora capitata,40,366,NA
+20230923,PACT-G3,14,1,1,5,Pocillopora acuta,40,370,NA
+20230923,MCAP-B3,1,1,1,6,Montipora capitata,40,370,NA
+20230923,PCOM-C3,2,1,1,6,Porites compressa,40,353,NA
+20230923,PACT-E3,3,1,1,6,Pocillopora acuta,40,362,NA
+20230923,PCOM-G3,4,1,1,6,Porites compressa,40,358,NA
+20230923,BK-11,5,1,1,6,Blank,40,369,NA
+20230923,PCOM-B3,6,1,1,6,Porites compressa,40,359,NA
+20230923,MCAP-F3,7,1,1,6,Montipora capitata,40,361,NA
+20230923,PCOM-F3,8,1,1,6,Porites compressa,40,366,NA
+20230923,PACT-D3,9,1,1,6,Pocillopora acuta,40,368,NA
+20230923,BK-12,10,1,1,6,Blank,40,371,NA
+20230923,MCAP-A3,11,1,1,6,Montipora capitata,40,362,NA
+20230923,PACT-H3,12,1,1,6,Pocillopora acuta,40,356,NA
+20230923,MCAP-E3,13,1,1,6,Montipora capitata,40,364,NA
+20230923,PACT-A3,14,1,1,6,Pocillopora acuta,40,365,NA
+20230923,MCAP-G4,1,1,1,7,Montipora capitata,32,370,NA
+20230923,PCOM-H4,2,1,1,7,Porites compressa,32,364,NA
+20230923,MCAP-C4,3,1,1,7,Montipora capitata,32,365,NA
+20230923,MCAP-D4,4,1,1,7,Montipora capitata,32,365,NA
+20230923,PACT-F4,5,1,1,7,Pocillopora acuta,32,366,NA
+20230923,PACT-C4,6,1,1,7,Pocillopora acuta,32,365,NA
+20230923,PCOM-D4,7,1,1,7,Porites compressa,32,361,NA
+20230923,BK-13,8,1,1,7,Blank,32,372,NA
+20230923,MCAP-A4,9,1,1,7,Montipora capitata,32,369,coral fell off plug
+20230923,PACT-E4,10,1,1,7,Pocillopora acuta,32,366,NA
+20230923,PCOM-F4,11,1,1,7,Porites compressa,32,360,NA
+20230923,BK-14,12,1,1,7,Blank,32,372,NA
+20230923,PACT-H4,13,1,1,7,Pocillopora acuta,32,368,NA
+20230923,PCOM-G4,14,1,1,7,Porites compressa,32,361,NA
+20230923,MCAP-F4,1,1,1,8,Montipora capitata,32,366,NA
+20230923,PACT-A4,2,1,1,8,Pocillopora acuta,32,365,NA
+20230923,MCAP-E4,3,1,1,8,Montipora capitata,32,364,NA
+20230923,BK-15,4,1,1,8,Blank,32,370,NA
+20230923,PCOM-C4,5,1,1,8,Porites compressa,32,360,NA
+20230923,MCAP-B4,6,1,1,8,Montipora capitata,32,364,NA
+20230923,PCOM-B4,7,1,1,8,Porites compressa,32,355,NA
+20230923,PACT-G4,8,1,1,8,Pocillopora acuta,32,368,NA
+20230923,MCAP-H4,9,1,1,8,Montipora capitata,32,366,NA
+20230923,PCOM-A4,10,1,1,8,Porites compressa,32,364,NA
+20230923,PACT-B4,11,1,1,8,Pocillopora acuta,32,360,NA
+20230923,PCOM-E4,12,1,1,8,Porites compressa,32,364,NA
+20230923,PACT-D4,13,1,1,8,Pocillopora acuta,32,366,NA
+20230923,BK-16,14,1,1,8,Blank,32,368,NA
+20230924,PACT-F5,1,1,1,9,Pocillopora acuta,22,372,NA
+20230924,BK-17,2,1,1,9,Blank,22,370,NA
+20230924,PCOM-D5,3,1,1,9,Porites compressa,22,365,NA
+20230924,MCAP-F5,4,1,1,9,Montipora capitata,22,367,NA
+20230924,MCAP-G5,5,1,1,9,Montipora capitata,22,366,NA
+20230924,PCOM-F5,6,1,1,9,Porites compressa,22,366,NA
+20230924,MCAP-D5,7,1,1,9,Montipora capitata,22,365,NA
+20230924,PACT-G5,8,1,1,9,Pocillopora acuta,22,367,NA
+20230924,MCAP-C5,9,1,1,9,Montipora capitata,22,370,NA
+20230924,PCOM-H5,10,1,1,9,Porites compressa,22,367,NA
+20230924,BK-18,11,1,1,9,Blank,22,372,NA
+20230924,PCOM-G5,12,1,1,9,Porites compressa,22,363,NA
+20230924,PACT-A5,13,1,1,9,Pocillopora acuta,22,368,NA
+20230924,PACT-C5,14,1,1,9,Pocillopora acuta,22,367,NA
+20230924,PCOM-A5,1,1,1,10,Porites compressa,22,370,NA
+20230924,MCAP-H5,2,1,1,10,Montipora capitata,22,355,NA
+20230924,PACT-D5,3,1,1,10,Pocillopora acuta,22,364,NA
+20230924,MCAP-E5,4,1,1,10,Montipora capitata,22,363,NA
+20230924,PACT-B5,5,1,1,10,Pocillopora acuta,22,365,NA
+20230924,BK-19,6,1,1,10,Blank,22,368,NA
+20230924,PCOM-C5,7,1,1,10,Porites compressa,22,365,NA
+20230924,PCOM-B5,8,1,1,10,Porites compressa,22,358,NA
+20230924,PACT-E5,9,1,1,10,Pocillopora acuta,22,360,NA
+20230924,MCAP-A5,10,1,1,10,Montipora capitata,22,370,NA
+20230924,BK-20,11,1,1,10,Blank,22,370,NA
+20230924,MCAP-B5,12,1,1,10,Montipora capitata,22,361,NA
+20230924,PACT-H5,13,1,1,10,Pocillopora acuta,22,364,NA
+20230924,PCOM-E5,14,1,1,10,Porites compressa,22,358,NA
+20230925,MCAP-C6,1,1,1,11,Montipora capitata,12,366,NA
+20230925,PCOM-D6,2,1,1,11,Porites compressa,12,362,NA
+20230925,BK-21,3,1,1,11,Blank,12,374,NA
+20230925,PACT-E6,4,1,1,11,Pocillopora acuta,12,367,NA
+20230925,MCAP-H6,5,1,1,11,Montipora capitata,12,363,NA
+20230925,PCOM-C6,6,1,1,11,Porites compressa,12,365,NA
+20230925,PACT-G6,7,1,1,11,Pocillopora acuta,12,366,NA
+20230925,PCOM-F6,8,1,1,11,Porites compressa,12,365,NA
+20230925,MCAP-B6,9,1,1,11,Montipora capitata,12,373,NA
+20230925,MCAP-G10,10,1,1,11,Montipora capitata,12,367,Read label wrong This is G10 not G6
+20230925,PCOM-A6,11,1,1,11,Porites compressa,12,360,temp probe 11 out of chamber
+20230925,BK-22,12,1,1,11,Blank,12,372,temp probe 12 in chamber 11
+20230925,MCAP-G6,13,1,1,11,Montipora capitata,12,364,NA
+20230925,PACT-B6,14,1,1,11,Pocillopora acuta,12,369,NA
+20230925,PACT-D6,15,1,1,11,Pocillopora acuta,12,374,NA
+20230925,MCAP-A6,1,1,1,12,Montipora capitata,12,376,NA
+20230925,MCAP-E6,2,1,1,12,Montipora capitata,12,357,NA
+20230925,PACT-H6,3,1,1,12,Pocillopora acuta,12,366,NA
+20230925,BK-23,4,1,1,12,Blank,12,372,NA
+20230925,MCAP-D6,5,1,1,12,Montipora capitata,12,360,NA
+20230925,PCOM-H6,6,1,1,12,Porites compressa,12,358,NA
+20230925,PACT-F6,7,1,1,12,Pocillopora acuta,12,372,NA
+20230925,PCOM-B6,8,1,1,12,Porites compressa,12,366,NA
+20230925,PACT-A6,9,1,1,12,Pocillopora acuta,12,372,NA
+20230925,MCAP-F6,10,1,1,12,Montipora capitata,12,370,NA
+20230925,PCOM-E6,11,1,1,12,Porites compressa,12,370,NA
+20230925,BK-24,12,1,1,12,Blank,12,376,NA
+20230925,PACT-C6,13,1,1,12,Pocillopora acuta,12,374,NA
+20230925,PCOM-G6,14,1,1,12,Porites compressa,12,371,NA
+20230925,MCAP-G7,1,1,1,13,Montipora capitata,35,366,NA
+20230925,PACT-A7,2,1,1,13,Pocillopora acuta,35,364,NA
+20230925,PCOM-E7,3,1,1,13,Porites compressa,35,360,NA
+20230925,MCAP-C7,4,1,1,13,Montipora capitata,35,359,NA
+20230925,BK-25,5,1,1,13,Blank,35,367,NA
+20230925,PCOM-G7,6,1,1,13,Porites compressa,35,342,NA
+20230925,PACT-C7,7,1,1,13,Pocillopora acuta,35,362,NA
+20230925,PCOM-B7,8,1,1,13,Porites compressa,35,357,NA
+20230925,MCAP-H7,9,1,1,13,Montipora capitata,35,365,NA
+20230925,MCAP-F7,10,1,1,13,Montipora capitata,35,359,NA
+20230925,BK-26,11,1,1,13,Blank,35,364,NA
+20230925,PACT-F7,12,1,1,13,Pocillopora acuta,35,363,NA
+20230925,PCOM-H7,13,1,1,13,Porites compressa,35,361,NA
+20230925,PACT-D7,14,1,1,13,Pocillopora acuta,35,359,NA
+20230925,MCAP-A7,1,1,1,14,Montipora capitata,35,367,NA
+20230925,PCOM-F7,2,1,1,14,Porites compressa,35,358,NA
+20230925,PACT-E7,3,1,1,14,Pocillopora acuta,35,365,NA
+20230925,PCOM-A7,4,1,1,14,Porites compressa,35,365,NA
+20230925,BK-27,5,1,1,14,Blank,35,373,dipping probe sheath raised up and exposed the to of the metal creating oscillations in the signal. Lowered sheath when noticed ~20min after start of run
+20230925,MCAP-E7,6,1,1,14,Montipora capitata,35,364,NA
+20230925,PCOM-D7,7,1,1,14,Porites compressa,35,366,NA
+20230925,MCAP-B7,8,1,1,14,Montipora capitata,35,368,NA
+20230925,PCOM-C7,9,1,1,14,Porites compressa,35,366,NA
+20230925,PACT-H7,10,1,1,14,Pocillopora acuta,35,367,NA
+20230925,BK-28,11,1,1,14,Blank,35,363,NA
+20230925,PACT-B7,12,1,1,14,Pocillopora acuta,35,368,NA
+20230925,MCAP-D7,13,1,1,14,Montipora capitata,35,365,NA
+20230925,PACT-G7,14,1,1,14,Pocillopora acuta,35,358,NA
+20230927,PCOM-C8,1,1,1,15,Porites compressa,25,366,NA
+20230927,BK-29,2,1,1,15,Blank,25,372,NA
+20230927,MCAP-C8,3,1,1,15,Montipora capitata,25,366,NA
+20230927,PACT-E8,4,1,1,15,Pocillopora acuta,25,367,NA
+20230927,PACT-G8,5,1,1,15,Pocillopora acuta,25,364,NA
+20230927,PCOM-A8,6,1,1,15,Porites compressa,25,356,NA
+20230927,MCAP-H8,7,1,1,15,Montipora capitata,25,366,NA
+20230927,PCOM-E8,8,1,1,15,Porites compressa,25,365,NA
+20230927,PACT-A8,9,1,1,15,Pocillopora acuta,25,372,NA
+20230927,MCAP-E8,10,1,1,15,Montipora capitata,25,371,NA
+20230927,PACT-B8,11,1,1,15,Pocillopora acuta,25,368,NA
+20230927,MCAP-G8,12,1,1,15,Montipora capitata,25,370,NA
+20230927,BK-30,13,1,1,15,Blank,25,374,NA
+20230927,PCOM-H8,14,1,1,15,Porites compressa,25,363,NA
+20230927,BK-31,1,1,1,16,Blank,25,374,NA
+20230927,MCAP-D8,2,1,1,16,Montipora capitata,25,360,NA
+20230927,PACT-F8,3,1,1,16,Pocillopora acuta,25,366,NA
+20230927,PCOM-B8,4,1,1,16,Porites compressa,25,353,NA
+20230927,MCAP-A8,5,1,1,16,Montipora capitata,25,360,NA
+20230927,PCOM-F8,6,1,1,16,Porites compressa,25,358,NA
+20230927,PACT-C8,7,1,1,16,Pocillopora acuta,25,364,NA
+20230927,MCAP-F8,8,1,1,16,Montipora capitata,25,357,NA
+20230927,PACT-D8,9,1,1,16,Pocillopora acuta,25,365,NA
+20230927,PCOM-G8,10,1,1,16,Porites compressa,25,359,NA
+20230927,PACT-H8,11,1,1,16,Pocillopora acuta,25,370,NA
+20230927,BK-32,12,1,1,16,Blank,25,373,NA
+20230927,PCOM-D8,13,1,1,16,Porites compressa,25,353,NA
+20230927,MCAP-B8,14,1,1,16,Montipora capitata,25,366,NA
+20230928,PCOM-G9,1,1,1,17,Porites compressa,30,360,NA
+20230928,BK-33,2,1,1,17,Blank,30,366,NA
+20230928,MCAP-B9,3,1,1,17,Montipora capitata,30,360,NA
+20230928,PACT-E9,4,1,1,17,Pocillopora acuta,30,368,NA
+20230928,PCOM-F9,5,1,1,17,Porites compressa,30,358,check for microalgae
+20230928,PACT-B9,6,1,1,17,Pocillopora acuta,30,356,NA
+20230928,PCOM-A9,7,1,1,17,Porites compressa,30,366,NA
+20230928,MCAP-F9,8,1,1,17,Montipora capitata,30,363,NA
+20230928,PACT-D9,9,1,1,17,Pocillopora acuta,30,372,NA
+20230928,MCAP-C9,10,1,1,17,Montipora capitata,30,360,NA
+20230928,PACT-A9,11,1,1,17,Pocillopora acuta,30,364,NA
+20230928,BK-34,12,1,1,17,Blank,30,371,NA
+20230928,PCOM-D9,13,1,1,17,Porites compressa,30,362,NA
+20230928,MCAP-A9,14,1,1,17,Montipora capitata,30,365,reglued
+20230928,PCOM-C9,1,1,1,18,Porites compressa,30,358,NA
+20230928,PACT-H9,2,1,1,18,Pocillopora acuta,30,364,NA
+20230928,MCAP-H9,3,1,1,18,Montipora capitata,30,360,NA
+20230928,BK-35,4,1,1,18,Blank,30,370,NA
+20230928,MCAP-E9,5,1,1,18,Montipora capitata,30,364,NA
+20230928,PCOM-H9,6,1,1,18,Porites compressa,30,364,NA
+20230928,PACT-F9,7,1,1,18,Pocillopora acuta,30,366,NA
+20230928,MCAP-D9,8,1,1,18,Montipora capitata,30,361,NA
+20230928,PCOM-E9,9,1,1,18,Porites compressa,30,362,NA
+20230928,PACT-C9,10,1,1,18,Pocillopora acuta,30,366,NA
+20230928,MCAP-G9,11,1,1,18,Montipora capitata,30,364,NA
+20230928,PCOM-B9,12,1,1,18,Porites compressa,30,364,NA
+20230928,PACT-G9,13,1,1,18,Pocillopora acuta,30,365,NA
+20230928,BK-36,14,1,1,18,Blank,30,369,NA
+20230928,PACT-A10,1,1,1,19,Pocillopora acuta,26.8,361,mucus in water after. Coral too large for whirlpak
+20230928,MCAP-D10,2,1,1,19,Montipora capitata,26.8,358,NA
+20230928,MCAP-B10,3,1,1,19,Montipora capitata,26.8,368,NA
+20230928,PCOM-C10,4,1,1,19,Porites compressa,26.8,364,NA
+20230928,BK-37,5,1,1,19,Blank,26.8,371,NA
+20230928,PACT-C10,6,1,1,19,Pocillopora acuta,26.8,352,NA
+20230928,PCOM-E10,7,1,1,19,Porites compressa,26.8,357,NA
+20230928,BK-38,8,1,1,19,Blank,26.8,368,NA
+20230928,PACT-F10,9,1,1,19,Pocillopora acuta,26.8,374,NA
+20230928,MCAP-C10,10,1,1,19,Montipora capitata,26.8,373,NA
+20230928,PCOM-H10,11,1,1,19,Porites compressa,26.8,367,NA
+20230928,MCAP-E10,12,1,1,19,Montipora capitata,26.8,368,NA
+20230928,PACT-B10,13,1,1,19,Pocillopora acuta,26.8,364,NA
+20230928,PCOM-G10,14,1,1,19,Porites compressa,26.8,360,NA
+20230929,PCOM-D10,1,1,1,20,Porites compressa,26.8,365,NA
+20230929,PACT-G10,2,1,1,20,Pocillopora acuta,26.8,362,NA
+20230929,PACT-H10,3,1,1,20,Pocillopora acuta,26.8,367,NA
+20230929,PCOM-A10,4,1,1,20,Porites compressa,26.8,360,NA
+20230929,BK-39,5,1,1,20,Blank,26.8,370,NA
+20230929,MCAP-G11,6,1,1,20,Montipora capitata,26.8,357,NA
+20230929,PACT-D10,7,1,1,20,Pocillopora acuta,26.8,263,NA
+20230929,MCAP-A11,8,1,1,20,Montipora capitata,26.8,366,chamber 14 
+20230929,PCOM-F10,9,1,1,20,Porites compressa,26.8,360,NA
+20230929,MCAP-H10,10,1,1,20,Montipora capitata,26.8,362,NA
+20230929,PCOM-B10,11,1,1,20,Porites compressa,26.8,364,NA
+20230929,MCAP-F10,12,1,1,20,Montipora capitata,26.8,361,NA
+20230929,PACT-F11,13,1,1,20,Pocillopora acuta,26.8,353,NA
+20230929,BK-40,14,1,1,20,Blank,26.8,369,chamber 8
