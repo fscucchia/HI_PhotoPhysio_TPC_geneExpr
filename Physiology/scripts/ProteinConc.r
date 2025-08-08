@@ -12,7 +12,7 @@ library(here)
 
 
 ## Import metadata
-Data <- read_delim(here("combined.csv"), delim = ";")
+Data <- read_delim(here("Protein_raw.csv"), delim = ";")
 
 Data <- Data %>%
   group_by(colony_id) %>% # Replace 'Column1' with the actual name of the first column

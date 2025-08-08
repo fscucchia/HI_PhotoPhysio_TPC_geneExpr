@@ -1443,11 +1443,11 @@ cat("passed_temp_cat_chla contains:", paste(passed_temp_cat_chla, collapse = ", 
 cat("failed_temp_cat_chla contains:", paste(failed_temp_cat_chla, collapse = ", "), "\n")
 
 # For SPECIES analysis (comparing temperatures within each species):
-passed_species_chla <- passed_temp_cat_chla  # These are actually species names
-failed_species_chla <- failed_temp_cat_chla   # These are actually species names
+passed_species_chla <- passed_temp_cat_chla  
+failed_species_chla <- failed_temp_cat_chla  
 
-passed_species_chlc <- passed_temp_cat_chlc   # These are actually species names  
-failed_species_chlc <- failed_temp_cat_chlc   # These are actually species names
+passed_species_chlc <- passed_temp_cat_chlc   
+failed_species_chlc <- failed_temp_cat_chlc  
 
 # For TEMPERATURE analysis, need to extract the correct values
 # re-run the Levene's test by temperature to get the correct categories:

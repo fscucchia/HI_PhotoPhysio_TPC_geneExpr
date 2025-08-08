@@ -1884,7 +1884,7 @@ tukey_chla_by_species <- x9 %>%
     })
   }) %>%
   mutate(
-    variable = "Chlorophyll_a_per_algae",  # Fixed variable name
+    variable = "Chlorophyll_a_per_algae",  
     analysis_by = "Species",
     test_type = "Tukey_HSD",
     Temp_Cat = NA
@@ -1909,7 +1909,7 @@ tukey_chlc_by_species <- x10 %>%
     })
   }) %>%
   mutate(
-    variable = "Chlorophyll_c_per_algae",  # Fixed variable name
+    variable = "Chlorophyll_c_per_algae", 
     analysis_by = "Species",
     test_type = "Tukey_HSD",
     Temp_Cat = NA
@@ -1962,7 +1962,7 @@ kruskal_chla_by_temp <- x9 %>%
     .groups = "drop"
   ) %>%
   mutate(
-    variable = "Chlorophyll_a_per_algae",  # Fixed variable name
+    variable = "Chlorophyll_a_per_algae", 
     analysis_by = "Temperature",
     test_type = "Kruskal-Wallis"
   )
@@ -1978,7 +1978,7 @@ kruskal_chlc_by_temp <- x10 %>%
     .groups = "drop"
   ) %>%
   mutate(
-    variable = "Chlorophyll_c_per_algae",  # Fixed variable name
+    variable = "Chlorophyll_c_per_algae", 
     analysis_by = "Temperature",
     test_type = "Kruskal-Wallis"
   )
@@ -2066,7 +2066,7 @@ all_kruskal_results <- bind_rows(
 dunn_chla_by_temp <- data.frame()
 
 for(temp in failed_temp_chla) {
-  temp_data <- x9 %>% filter(Temp_Cat == temp)  # Use x9, not x8
+  temp_data <- x9 %>% filter(Temp_Cat == temp)  
   
   tryCatch({
     dunn_result <- dunnTest(`chla (ug)/cell` ~ species, data = temp_data, method = "bonferroni")
@@ -2105,7 +2105,7 @@ for(temp in failed_temp_chla) {
 dunn_chlc_by_temp <- data.frame()
 
 for(temp in failed_temp_chlc) {
-  temp_data <- x10 %>% filter(Temp_Cat == temp)  # Use x10, not x6
+  temp_data <- x10 %>% filter(Temp_Cat == temp)
   
   tryCatch({
     dunn_result <- dunnTest(`chlc (ug)/cell` ~ species, data = temp_data, method = "bonferroni")
@@ -2143,7 +2143,7 @@ for(temp in failed_temp_chlc) {
 dunn_chla_by_species <- data.frame()
 
 for(sp in failed_species_chla) {
-  species_data <- x9 %>% filter(species == sp)  # Use x9, not x8
+  species_data <- x9 %>% filter(species == sp) 
   
   # Check if there are enough groups and observations
   if(n_distinct(species_data$Temp_Cat) > 1 && nrow(species_data) > 2) {
@@ -2203,7 +2203,7 @@ for(sp in failed_species_chla) {
 dunn_chlc_by_species <- data.frame()
 
 for(sp in failed_species_chlc) {
-  species_data <- x10 %>% filter(species == sp)  # Use x10, not x6
+  species_data <- x10 %>% filter(species == sp) 
   
   # Check if there are enough groups and observations
   if(n_distinct(species_data$Temp_Cat) > 1 && nrow(species_data) > 2) {
