@@ -46,7 +46,7 @@ treatmentinfo_30 <- treatmentinfo_30[match(colnames(logTPM_merged_filt_30), trea
 # Transpose for DAPC
 datExpr_30 <- t(logTPM_merged_filt_30)
 
-#Assigning groups from your metadata, ensure treatmentinfo is ordered to match datExpr rownames
+#Assigning groups from themetadata, ensure treatmentinfo is ordered to match datExpr rownames
 treatmentinfo_30 <- treatmentinfo_30[match(rownames(datExpr_30), treatmentinfo_30$sample_id), ]
 
 # Create group variable
@@ -81,8 +81,8 @@ dapc_scores_30 <- dapc_res$ind.coord  # Each row = sample, columns = discriminan
 dapc_df <- cbind(treatmentinfo_30, dapc_scores_30)
 
 # Plot DAPC results
-# Assign colors to each group (make sure the order matches your group levels)
-group_colors <- c("blue", "orange", "green") # adjust as needed for your groups
+# Assign colors to each group (make sure the order matches the group levels)
+group_colors <- c("blue", "orange", "green")
 
 # Plot with legend
 scatter(
@@ -149,9 +149,9 @@ print(mean_LD1_wide)
 # 3 pcom       12.3   8.62               -3.68
 
 
-## Add arrows and labels to your ggplot:
+## Add arrows and labels to the ggplot:
 
-# Your density plot
+# the density plot
 p <- ggplot(dapc_df, aes(x = LD1, fill = species, color = species, alpha = Condition)) +
   geom_density(position = "identity", adjust = 1.5) +
   scale_fill_manual(values = species_colors) +
@@ -220,7 +220,7 @@ model <- MCMCglmm(
 post_samples <- model$Sol
 
 # extracts the species-specific effects of being at higher temperature
-effect_Mcap_mid <- post_samples[, "temp_statusmid"] #"mcap" is the reference species (the baseline in your model).
+effect_Mcap_mid <- post_samples[, "temp_statusmid"] #"mcap" is the reference species (the baseline in the model).
 effect_Pacu_mid <- post_samples[, "temp_statusmid"] + post_samples[, "temp_statusmid:speciespacu"]
 effect_Pcom_mid <- post_samples[, "temp_statusmid"] + post_samples[, "temp_statusmid:speciespcom"]
 
@@ -250,7 +250,7 @@ treatmentinfo_35 <- treatmentinfo_35[match(colnames(logTPM_merged_filt_35), trea
 # Transpose for DAPC
 datExpr_35 <- t(logTPM_merged_filt_35)
 # grouping factor: create vector group that assigns each sample to its group
-#Assigning groups from your metadata, ensure treatmentinfo is ordered to match datExpr rownames
+#Assigning groups from themetadata, ensure treatmentinfo is ordered to match datExpr rownames
 treatmentinfo_35 <- treatmentinfo_35[match(rownames(datExpr_35), treatmentinfo_35$sample_id), ]
 group_35 <- as.factor(paste(treatmentinfo_35$temp, treatmentinfo_35$species, sep = "_"))
 
@@ -283,8 +283,8 @@ dapc_scores_35 <- dapc_res$ind.coord  # Each row = sample, columns = discriminan
 dapc_df <- cbind(treatmentinfo_35, dapc_scores_35)
 
 # Plot DAPC results
-# Assign colors to each group (make sure the order matches your group levels)
-group_colors <- c("blue", "orange", "green") # adjust as needed for your groups
+# Assign colors to each group (make sure the order matches the group levels)
+group_colors <- c("blue", "orange", "green")
 
 # Plot with legend
 scatter(
@@ -351,9 +351,9 @@ print(mean_LD1_wide)
 # 3 pcom      21.7   24.3                 2.56
 
 
-## Add arrows and labels to your ggplot:
+## Add arrows and labels to the ggplot:
 
-# Your density plot
+# the density plot
 p <- ggplot(dapc_df, aes(x = LD1, fill = species, color = species, alpha = Condition)) +
   geom_density(position = "identity", adjust = 1.5) +
   scale_fill_manual(values = species_colors) +
@@ -423,7 +423,7 @@ model <- MCMCglmm(
 post_samples <- model$Sol
 
 # extracts the species-specific effects of being at higher temperature
-effect_Mcap_high <- post_samples[, "temp_statushigh"] #"mcap" is the reference species (the baseline in your model).
+effect_Mcap_high <- post_samples[, "temp_statushigh"] #"mcap" is the reference species (the baseline in the model).
 effect_Pacu_high <- post_samples[, "temp_statushigh"] + post_samples[, "temp_statushigh:speciespacu"]
 effect_Pcom_high <- post_samples[, "temp_statushigh"] + post_samples[, "temp_statushigh:speciespcom"]
 
@@ -446,40 +446,6 @@ p_Pacu_vs_Pcom <- mean(diff_Pacu_vs_Pcom > 0) ## 1
 #There is strong evidence that Pacu has greater plasticity than Mcap (p_Mcap_vs_Pacu = 0).
 #There is moderate evidence that Mcap has greater plasticity than Pcom (p_Mcap_vs_Pcom = 0.9).
 #There is strong evidence that Pacu has greater plasticity than Pcom (p_Pacu_vs_Pcom = 1).
-# How to report them?
-# "There is a 90% posterior probability that Mcap has greater plasticity than Pcom."
-# "The MCMC-based probability that Mcap's plasticity exceeds Pcom's is 0.9."
-
-
-
-# # To identify which genes drive the shifts in the three species in your DAPC, you should examine the loadings (also called "contributions" or "coefficients") of 
-# # each gene to the first discriminant function (LD1).
-
-# # Extract loadings for LD1
-# loadings_LD1 <- dapc_res$var.contr[, 1]  # 1 = LD1
-
-# # Sort genes by absolute value of their contribution to LD1
-# top_genes <- sort(abs(loadings_LD1), decreasing = TRUE)
-
-# #Get the top contributing genes
-# top20_genes <- names(top_genes)[1:20]
-# top20_loadings <- loadings_LD1[top20_genes]
-# print(data.frame(Gene = top20_genes, Loading = top20_loadings))
-# #Genes with the largest (absolute) loadings are those that contribute most to the separation along LD1, i.e., they drive the differences you see 
-# #between species and temperature groups.
-
-# #Visualize gene contributions
-# library(ggplot2)
-# topN <- 20
-# top_genes_df <- data.frame(
-#   Gene = names(top_genes)[1:topN],
-#   Loading = loadings_LD1[names(top_genes)[1:topN]]
-# )
-
-# ggplot(top_genes_df, aes(x = reorder(Gene, abs(Loading)), y = Loading)) +
-#   geom_col() +
-#   coord_flip() +
-#   labs(title = "Top genes contributing to LD1", x = "Gene", y = "LD1 Loading")
 
 
 
@@ -502,14 +468,14 @@ control_samples$species <- factor(control_samples$species)
 design <- model.matrix(~ 0 + species, data = control_samples)
 # By default, model.matrix(~ species, ...) would include an intercept (baseline) and then coefficients for all but one species (the reference).
 # Using ~ 0 + species removes the intercept and creates a separate column for each species in the design matrix.
-# This allows you to directly compare each species’ mean expression, and makes it easy to specify contrasts like mcap - pacu.
+# This allows you to directly compare each species’ mean expression
 colnames(design) <- levels(control_samples$species)
 
 ### Run limma
 # Fit the linear model
 fit <- lmFit(logTPM_control, design)
 
-# Make pairwise contrasts between species (example: mcap vs pacu, mcap vs pcom, pacu vs pcom)
+# Make pairwise contrasts between species (mcap vs pacu, mcap vs pcom, pacu vs pcom)
 contrast.matrix <- makeContrasts(
   mcap_vs_pacu = mcap - pacu,
   mcap_vs_pcom = mcap - pcom,
@@ -529,7 +495,7 @@ DE_pacu_vs_pcom <- topTable(fit2, coef = "pacu_vs_pcom", number = Inf)
 # AveExpr: The average (mean) log2 expression level of the gene across all samples in the comparison.
 # t: The moderated t-statistic for the test of differential expression.
 # P.Value: The raw p-value for the test of differential expression (before multiple testing correction).
-# adj.P.Val: The adjusted p-value (usually Benjamini-Hochberg FDR) for multiple testing correction.
+# adj.P.Val: The adjusted p-value (Benjamini-Hochberg FDR) for multiple testing correction.
 # B: The log-odds that the gene is differentially expressed (higher B means more likely to be truly differentially expressed).
 
 
@@ -588,8 +554,6 @@ DE_pacu_vs_pcom_annot <- left_join(ortho_map, DE_pacu_vs_pcom, by = "orthoID")
 
 
 ###### search for top 10% hub genes from WGCNA
-
-
 
 ##load gene clusters - Mcap
 
@@ -697,7 +661,7 @@ dim(blast)
 #[1] 49746    12
 
 ### find top_hit from blast output corresponding to the shared and unique hub genes per each cluster
-# Create a data frame from your gene list
+# Create a data frame from the gene list
 shared_genes_cluster5_Mcap <- data.frame(Gene = cluster5_hub_genes_shared_Mcap, stringsAsFactors = FALSE)
 shared_genes_cluster8_Mcap <- data.frame(Gene = cluster8_hub_genes_shared_Mcap, stringsAsFactors = FALSE)
 shared_genes_cluster9_Mcap <- data.frame(Gene = cluster9_hub_genes_shared_Mcap, stringsAsFactors = FALSE)
@@ -961,20 +925,6 @@ DE_mcap_vs_pacu_uniqueHubs_cluster9_control <- left_join(DE_mcap_vs_pacu_complet
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 ##load gene clusters - Pacu
 
 #blue
@@ -1079,7 +1029,7 @@ dim(blast)
 #[1] 40740    12
 
 ### find top_hit from blast output corresponding to the hub genes
-# Create a data frame from your gene list
+# Create a data frame from the gene list
 shared_genes_cluster1_Pcom <- data.frame(Gene = cluster1_hub_genes_shared_Pcom, stringsAsFactors = FALSE)
 shared_genes_cluster2_Pcom <- data.frame(Gene = cluster2_hub_genes_shared_Pcom, stringsAsFactors = FALSE)
 shared_genes_cluster3_Pcom <- data.frame(Gene = cluster3_hub_genes_shared_Pcom, stringsAsFactors = FALSE)
