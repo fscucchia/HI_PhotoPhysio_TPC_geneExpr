@@ -1,7 +1,5 @@
 
-####### GO Enrichment Analysis of WGCNA top 10% hub genes per each cluster - ViSEAGO
-
-#https://www.bioconductor.org/packages/release/bioc/vignettes/ViSEAGO/inst/doc/ViSEAGO.html
+####### GO Enrichment Analysis of WGCNA top 10% hub genes per each cluster - Pcom
 
 setwd("...................")
 load(".RData") #load WCGNA data
@@ -757,7 +755,6 @@ valid_results[["cluster9_control_BP"]] <- list(
   heatmap = heatmap_control_BP
 ) ##this one gives issues
 # Even though there are 65 enriched GO terms, ViSEAGO could not compute semantic similarity distances between them.
-# This can happen if the terms are too unrelated, or if annotation or ontology structure is incomplete for those terms.
 
 heatmap_control_BP <- tryCatch(
   ViSEAGO::GOterms_heatmap(ss_control_BP, showIC = TRUE, showGOlabels = TRUE),

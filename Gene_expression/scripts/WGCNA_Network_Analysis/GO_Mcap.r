@@ -1,7 +1,5 @@
 
-####### GO Enrichment Analysis of WGCNA top 10% hub genes per each cluster - ViSEAGO
-
-#https://www.bioconductor.org/packages/release/bioc/vignettes/ViSEAGO/inst/doc/ViSEAGO.html
+####### GO Enrichment Analysis of WGCNA top 10% hub genes per each cluster - Mcap
 
 setwd("...................")
 load(".RData") #load WCGNA data
@@ -219,23 +217,6 @@ length(unique(Custom_GOs_validated$gene_id))
 
 write.table(Custom_GOs_validated, "Viseago_custom_GOs_hubGenes.txt", row.names = FALSE, sep = "\t", quote = FALSE,col.names=TRUE)
 
-################## create the GO_MWU annotation file ##################
-# Collapse to one row per gene, GO terms separated by semicolon
-GO_MWU_annot <- Custom_list_GOs %>%
-  group_by(gene_id) %>%
-  summarise(GO_terms = paste(unique(GOID), collapse = ";")) %>%
-  ungroup()
-
-# Save as tab-delimited, no header, no quotes
-write.table(
-  GO_MWU_annot,
-  "GO_MWU_annotations.txt",
-  sep = "\t", row.names = FALSE, col.names = FALSE, quote = FALSE
-)
-########################################################################
-
-
-
 
 ### load into ViSEAGO
 
@@ -343,7 +324,7 @@ selection_cluster9_35<-scan(
 )
 
 
-# Define your gene lists for each cluster/temperature
+# Define gene lists for each cluster/temperature
 gene_lists <- list(
   cluster5_control = selection_cluster5_control,
   cluster5_30      = selection_cluster5_30,

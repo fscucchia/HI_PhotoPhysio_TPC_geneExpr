@@ -1,7 +1,5 @@
 
-####### GO Enrichment Analysis of WGCNA top 10% hub genes per each cluster - ViSEAGO
-
-#https://www.bioconductor.org/packages/release/bioc/vignettes/ViSEAGO/inst/doc/ViSEAGO.html
+####### GO Enrichment Analysis of WGCNA top 10% hub genes per each cluster - Pacu
 
 setwd("...................")
 load(".RData") #load WCGNA data
