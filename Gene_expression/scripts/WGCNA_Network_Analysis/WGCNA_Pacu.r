@@ -586,7 +586,7 @@ pred_df1_boot <- data.frame(
   upper = ci_upper
 )
 
-##Overlay on your Strader plot
+##Overlay on the Strader plot
 df_mod1$temp_num <- as.numeric(sub("^tt", "", df_mod1$temp))
 
 df_mod1$temp_num_f <- factor(df_mod1$temp_num)
@@ -637,7 +637,7 @@ ggplot(df_mod1, aes(x = temp_num, y = Eigengene, group = temp_num_f)) +
 #        title = "Segmented Regression with 95% Confidence Interval") +
 #   theme_bw()
 
-# ##Overlay on your Strader plot
+# ##Overlay on the Strader plot
 # df_mod1$temp_num <- as.numeric(sub("^tt", "", df_mod1$temp))
 
 # df_mod1$temp_num_f <- factor(df_mod1$temp_num)
@@ -744,7 +744,7 @@ pred_df2_boot <- data.frame(
   upper = ci_upper
 )
 
-##Overlay on your Strader plot
+##Overlay on the Strader plot
 df_mod2$temp_num <- as.numeric(sub("^tt", "", df_mod2$temp))
 
 df_mod2$temp_num_f <- factor(df_mod2$temp_num)
@@ -796,7 +796,7 @@ ggplot(df_mod2, aes(x = temp_num, y = Eigengene, group = temp_num_f)) +
 #   theme_bw()
 
 
-# ##Overlay on your Strader plot
+# ##Overlay on the Strader plot
 # df_mod2$temp_num <- as.numeric(sub("^tt", "", df_mod2$temp))
 
 # df_mod2$temp_num_f <- factor(df_mod2$temp_num)
@@ -842,7 +842,7 @@ save(
 
 # Export the network of a specific module ("blue")
 blue_genes <- colnames(datExpr)[moduleColors == "blue"] ##7849
-# Subset your expression matrix to blue module genes
+# Subset the expression matrix to blue module genes
 datExpr_blue <- datExpr[, blue_genes]
 
 control_samples <- treatmentinfo$sample_id[treatmentinfo$temp == "tt26.8"]
@@ -1049,7 +1049,7 @@ library(dplyr)
 library(ggplot2)
 library(RColorBrewer)
 
-# Assume membership_summary and pattern_labels are already created as in your alluvial plot code
+# Assume membership_summary and pattern_labels are already created as in the alluvial plot code
 
 # Calculate total number of unique hub genes across all conditions
 unique_hubs <- unique(c(top10pct_hubs_control, top10pct_hubs_treat30, top10pct_hubs_treat35))
@@ -1138,7 +1138,7 @@ write.csv(blue_hub_data,
 ####### repeat for turquoise module
 # Export the network of a specific module ("turquoise")
 turquoise_genes <- colnames(datExpr)[moduleColors == "turquoise"] ##16569
-# Subset your expression matrix to turquoise module genes
+# Subset the expression matrix to turquoise module genes
 datExpr_turquoise <- datExpr[, turquoise_genes]
 
 # Subset expression data for each group
@@ -1329,7 +1329,7 @@ library(dplyr)
 library(ggplot2)
 library(RColorBrewer)
 
-# Assume membership_summary and pattern_labels are already created as in your alluvial plot code
+# Assume membership_summary and pattern_labels are already created as in the alluvial plot code
 
 # Calculate total number of unique hub genes across all conditions
 unique_hubs <- unique(c(top10pct_hubs_control, top10pct_hubs_treat30, top10pct_hubs_treat35))
@@ -1487,7 +1487,7 @@ ggplot(membership_summary_global,
 # It is defined as:
 # Jaccard = (Number of shared edges) / (Total number of unique edges in both networks)
 # To calculate the Jaccard Index and percent edge change for the entire set of genes in the blue and turquoise modules (not just the top 30), 
-# use all genes in the module for your adjacency/correlation matrices and edge comparisons.
+# use all genes in the module for the adjacency/correlation matrices and edge comparisons.
 
 # Use all genes in the blue and turquoise modules
 all_blue_genes <- colnames(datExpr)[moduleColors == "blue"]

@@ -673,9 +673,9 @@ boot_seg <- function(data, indices, grid_temp) {
 }
 
 #Run the bootstrap
-# your current bootstrap code is recalculating the segmented fit for each bootstrap sample—that’s the whole point of the bootstrap: 
+# the current bootstrap code is recalculating the segmented fit for each bootstrap sample—that’s the whole point of the bootstrap: 
 # to estimate the variability of the fit (and thus the confidence intervals) by refitting the model on resampled data.
-# But: The red line you plot (fit in pred_df1_boot) is the median of the bootstrapped fits at each grid point, not the fit from your 
+# But: The red line you plot (fit in pred_df1_boot) is the median of the bootstrapped fits at each grid point, not the fit from the 
 # original seg_fit1 object.
 set.seed(123)
 grid_temp <- seq(min(df_mod5$temp_num), max(df_mod5$temp_num), length.out = 200)
@@ -702,7 +702,7 @@ pred_df5_boot <- data.frame(
   upper = ci_upper
 )
 
-##Overlay on your Strader plot
+##Overlay on Strader plot
 df_mod5$temp_num <- as.numeric(sub("^t", "", df_mod5$temp))
 
 df_mod5$temp_num_f <- factor(df_mod5$temp_num)
@@ -807,7 +807,7 @@ pred_df6_boot <- data.frame(
   upper = ci_upper
 )
 
-##Overlay on your Strader plot
+##Overlay on Strader plot
 df_mod6$temp_num <- as.numeric(sub("^t", "", df_mod6$temp))
 
 df_mod6$temp_num_f <- factor(df_mod6$temp_num)
@@ -910,7 +910,7 @@ pred_df8_boot <- data.frame(
   upper = ci_upper
 )
 
-##Overlay on your Strader plot
+##Overlay on Strader plot
 df_mod8$temp_num <- as.numeric(sub("^t", "", df_mod8$temp))
 
 df_mod8$temp_num_f <- factor(df_mod8$temp_num)
@@ -1011,7 +1011,7 @@ pred_df9_boot <- data.frame(
   upper = ci_upper
 )
 
-##Overlay on your Strader plot
+##Overlay on Strader plot
 df_mod9$temp_num <- as.numeric(sub("^t", "", df_mod9$temp))
 
 df_mod9$temp_num_f <- factor(df_mod9$temp_num)
@@ -1048,7 +1048,7 @@ treat30_samples <- treatmentinfo$sample_id[treatmentinfo$temp == "t30"]
 treat35_samples <- treatmentinfo$sample_id[treatmentinfo$temp == "t35"]
 
 #### Export the network of a specific cluster - cluster5
-cluster5_modules <- c("lightcyan", "orange", "blue", "salmon") #Define the module colors for your cluster of interest
+cluster5_modules <- c("lightcyan", "orange", "blue", "salmon") #Define the module colors for cluster of interest
 inCluster5 <- moduleColors %in% cluster5_modules #Select genes belonging to these modules
 cluster5_genes <- colnames(datExpr)[inCluster5]  ##10326
 
@@ -1249,7 +1249,7 @@ library(dplyr)
 library(ggplot2)
 library(RColorBrewer)
 
-# Assume membership_summary and pattern_labels are already created as in your alluvial plot code
+# Assume membership_summary and pattern_labels are already created as in the alluvial plot code
 
 # Calculate total number of unique hub genes across all conditions
 unique_hubs <- unique(c(top10pct_hubs_control, top10pct_hubs_treat30, top10pct_hubs_treat35))
@@ -1336,7 +1336,7 @@ write.csv(cluster5_hub_data,
 
 
 #### Export the network of a specific cluster - cluster6
-cluster6_modules <- c("lightgreen", "sienna3")  # replace with your actual module colors for cluster6
+cluster6_modules <- c("lightgreen", "sienna3")  
 inCluster6 <- moduleColors %in% cluster6_modules #Select genes belonging to these modules
 cluster6_genes <- colnames(datExpr)[inCluster6] ##640
 
@@ -1550,7 +1550,7 @@ library(dplyr)
 library(ggplot2)
 library(RColorBrewer)
 
-# Assume membership_summary and pattern_labels are already created as in your alluvial plot code
+# Assume membership_summary and pattern_labels are already created as in alluvial plot code
 # Calculate total number of unique hub genes across all conditions
 unique_hubs <- unique(c(top10pct_hubs_control, top10pct_hubs_treat30, top10pct_hubs_treat35))
 total_hubs <- length(unique_hubs)
@@ -1588,7 +1588,7 @@ bar6 <- ggplot(membership_summary, aes(x = "Cluster 6", y = Percent, fill = patt
 
 
 #### Export the network of a specific cluster - cluster8
-cluster8_modules <- c("turquoise")  # replace with your actual module colors for cluster8
+cluster8_modules <- c("turquoise")  
 inCluster8 <- moduleColors %in% cluster8_modules #Select genes belonging to these modules
 cluster8_genes <- colnames(datExpr)[inCluster8] ##6303
 
@@ -1776,7 +1776,7 @@ library(dplyr)
 library(ggplot2)
 library(RColorBrewer)
 
-# Assume membership_summary and pattern_labels are already created as in your alluvial plot code
+# Assume membership_summary and pattern_labels are already created as in alluvial plot code
 # Calculate total number of unique hub genes across all conditions
 unique_hubs <- unique(c(top10pct_hubs_control, top10pct_hubs_treat30, top10pct_hubs_treat35))
 total_hubs <- length(unique_hubs)
@@ -1861,7 +1861,7 @@ write.csv(cluster8_hub_data,
 
 
 #### Export the network of a specific cluster - cluster9
-cluster9_modules <- c("darkgreen", "yellow", "bisque4", "grey60")  # replace with your actual module colors for cluster9
+cluster9_modules <- c("darkgreen", "yellow", "bisque4", "grey60")  
 inCluster9 <- moduleColors %in% cluster9_modules #Select genes belonging to these modules
 cluster9_genes <- colnames(datExpr)[inCluster9] ##2057
 
@@ -2049,7 +2049,7 @@ library(dplyr)
 library(ggplot2)
 library(RColorBrewer)
 
-# Assume membership_summary and pattern_labels are already created as in your alluvial plot code
+# Assume membership_summary and pattern_labels are already created as in alluvial plot code
 
 # Calculate total number of unique hub genes across all conditions
 unique_hubs <- unique(c(top10pct_hubs_control, top10pct_hubs_treat30, top10pct_hubs_treat35))
@@ -2210,11 +2210,11 @@ ggplot(membership_summary_global,
 # It is defined as:
 # Jaccard = (Number of shared edges) / (Total number of unique edges in both networks)
 # To calculate the Jaccard Index and percent edge change for the entire set of genes in the selected clusters (not just the top10% hubs), 
-# use all genes in the module for your adjacency/correlation matrices and edge comparisons.
+# use all genes in the module for adjacency/correlation matrices and edge comparisons.
 
 # Use all genes in the selected clusters
 
-cluster5_modules <- c("lightcyan", "orange", "blue", "salmon") #Define the module colors for your cluster of interest
+cluster5_modules <- c("lightcyan", "orange", "blue", "salmon") #Define the module colors for cluster of interest
 inCluster5 <- moduleColors %in% cluster5_modules #Select genes belonging to these modules
 cluster5_genes <- colnames(datExpr)[inCluster5]
 
@@ -2550,7 +2550,7 @@ write.csv(cluster9_counts_t, file = "cluster9_gene_counts.csv", row.names = FALS
 
 ##### save cluster gene lists for GO enrichment analysis with GO_MWU
 
-# All genes in your background (e.g., all columns of datExpr)
+# All genes in background (e.g., all columns of datExpr)
 all_genes <- colnames(datExpr)
 
 # cluster 5
