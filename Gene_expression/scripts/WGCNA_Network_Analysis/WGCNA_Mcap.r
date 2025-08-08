@@ -595,6 +595,17 @@ fit3 <- lm(Eigengene ~ temp_num, data = df_mod3)
 seg_fit3 <- segmented(fit3, seg.Z = ~temp_num, npsi = 1)
 
 summary(seg_fit3)
+#                Estimate Std. Error t value Pr(>|t|)
+# (Intercept)    0.104639   0.336743   0.311    0.760
+# temp_num      -0.005573   0.022014  -0.253    0.803
+# U1.temp_num    0.025015   0.076609   0.327    0.748
+# U2.temp_num   -0.033113   0.077989  -0.425    0.676
+# psi1.temp_num  0.000000  10.404933   0.000    1.000
+# psi2.temp_num  0.000000   6.017144   0.000    1.000
+
+# Residual standard error: 0.1868 on 18 degrees of freedom
+# Multiple R-squared:  0.03849,	Adjusted R-squared:  -0.2286 
+# F-statistic: 0.1441 on 5 and 18 DF,  p-value: 0.9793
 #Multiple R-Squared: 0.03849 - There is no significant breakpoint in this fit
 plot(seg_fit3)
 
@@ -1022,7 +1033,6 @@ ggplot(df_mod9, aes(x = temp_num, y = Eigengene, group = temp_num_f)) +
     strip.background = element_rect(fill = "#e0ffff", color = NA),
     panel.grid = element_blank()
   )
-
 
 
 
