@@ -42,7 +42,7 @@ library(edgeR)
 transcriptCountMatrix <- read.table("/scratch/workspace/federica_scucchia_uri_edu-hawaii/20250424_ENCORE_HawaiiTPC_Federica/output/Mapping_twopassMode_Pacu/transcript_count_matrix.csv", 
                                    header = TRUE, row.names = 1, sep = ",")
 
-# Match transcript lengths to your count matrix
+# Match transcript lengths to the count matrix
 matched_lengths <- transcript_lengths$length[match(rownames(transcriptCountMatrix), transcript_lengths$transcript_id)]
 
 # Create DGEList and normalize for library size
@@ -241,7 +241,7 @@ print(paste("Percentage of genome showing isoform switching:", round(percentage_
 #[1] "Percentage of genome showing isoform switching: 12.59 %"
 
 total_isoforms_analyzed <- nrow(switchListAnalyzed$isoformFeatures)
-switching_isoforms <- 6754  # From your total switches
+switching_isoforms <- 6754  # From the total switches
 
 print(paste("Switching isoforms out of total analyzed:", 
            round((switching_isoforms/total_isoforms_analyzed)*100, 2), "%"))
@@ -258,13 +258,13 @@ print(paste("Switching isoforms out of total analyzed:",
 # Run IUPred2A → Identify disordered regions
 
 # 1. CPC2 - Coding Potential Prediction
-# Determines which of your 19,168 ORFs are likely protein-coding vs non-coding
+# Determines which of the 19,168 ORFs are likely protein-coding vs non-coding
 # Use: Nucleotide FASTA file (_nt.fasta)
 # Webserver: http://cpc2.gao-lab.org/
 # Critical for: Filtering out non-coding transcripts before functional analysis
 
 # 2. Pfam - Protein Domain Prediction
-# Identifies functional protein domains in your switching isoforms
+# Identifies functional protein domains in the switching isoforms
 # Use: Amino acid FASTA file (_AA.fasta)
 # ran as batch job, see Pfam_Mcap.sh
 # Critical for: Understanding functional consequences of isoform switches
@@ -325,7 +325,7 @@ pip install DeepLoc-2.1.0.tar.gz
 # OR if you're in the deeploc2_package directory:
 pip install . --user  ## within conda environment
 
-# Add your local bin to PATH
+# Add the local bin to PATH
 export PATH="/home/federica_scucchia_uri_edu/.local/bin:$PATH"
 
 # Test installation
@@ -573,7 +573,7 @@ write.table(cpc2_combined,
 # # Convert to web server format (remove sequence IDs, add proper headers)
 # # Web server format should be: position, amino_acid, iupred_score, anchor_score
 
-# # If your data has 4 columns (seq_id, pos, aa, score), convert to web format
+# # If the data has 4 columns (seq_id, pos, aa, score), convert to web format
 # if(ncol(iupred_data) == 4) {
 #     # Remove sequence ID column and convert to web server format
 #     web_format_data <- iupred_data[, 2:4]  # Keep position, amino_acid, score
@@ -590,7 +590,7 @@ write.table(cpc2_combined,
     
 # } else {
 #     cat("Unexpected number of columns:", ncol(iupred_data), "\n")
-#     stop("Please check your IUPred2A data format")
+#     stop("Please check the IUPred2A data format")
 # }
 
 # # Create web server format file with proper headers
@@ -775,7 +775,7 @@ write.table(cpc2_combined,
 #     "Endoplasmic.reticulum", "Lysosome.Vacuole", "Golgi.apparatus", "Peroxisome"
 # )
 
-# # Read your combined DeepLoc2 file
+# # Read the combined DeepLoc2 file
 # deeploc_combined <- read.table(paste0(base_path, "deeploc2_combined_results.tsv"), 
 #                               header = TRUE, sep = "\t", stringsAsFactors = FALSE)
 
@@ -967,7 +967,7 @@ valid_consequences <- c(
     'isoform_length'          # Isoform length
 )
 
-# Check which consequences can be analyzed with your current data
+# Check which consequences can be analyzed with the current data
 available_consequences <- c()
 
 # Alternative splicing consequences
@@ -2093,7 +2093,7 @@ not_switching_genes_control_vs_30 <- setdiff(all_genes_in_analysis, switching_ge
 not_switching_genes_control_vs_35 <- setdiff(all_genes_in_analysis, switching_genes_control_vs_35)
 not_switching_genes_30_vs_35 <- setdiff(all_genes_in_analysis, switching_genes_30_vs_35)
 
-# Set hub genes variables (you'll need to define these based on your hub gene analysis)
+# Set hub genes variables (you'll need to define these based on the hub gene analysis)
 hub_genes_control <- all_hub_genes_control
 hub_genes_30 <- all_hub_genes_30
 hub_genes_35 <- all_hub_genes_35
