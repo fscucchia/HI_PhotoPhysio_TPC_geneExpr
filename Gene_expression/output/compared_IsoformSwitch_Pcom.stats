@@ -1,0 +1,30 @@
+# gffcompare v0.12.6 | Command line was:
+#gffcompare -r /work/pi_hputnam_uri_edu/snRNA_analysis/references/Porites_compressa_HIv_modified.gtf stringtie_merged_IsoformSwitch.gtf -o ./compared_IsoformSwitch
+#
+
+#= Summary for dataset: stringtie_merged_IsoformSwitch.gtf 
+#     Query mRNAs :  167680 in   69193 loci  (135118 multi-exon transcripts)
+#            (19155 multi-transcript loci, ~2.4 transcripts per locus)
+# Reference mRNAs :   44130 in   43977 loci  (31191 multi-exon)
+# Super-loci w/ reference transcripts:    37248
+#-----------------| Sensitivity | Precision  |
+        Base level:   100.0     |    47.4    |
+        Exon level:    94.3     |    49.5    |
+      Intron level:   100.0     |    61.2    |
+Intron chain level:   100.0     |    23.1    |
+  Transcript level:    98.5     |    25.9    |
+       Locus level:    98.6     |    53.4    |
+
+     Matching intron chains:   31191
+       Matching transcripts:   43479
+              Matching loci:   43350
+
+          Missed exons:       0/243312	(  0.0%)
+           Novel exons:  138738/476176	( 29.1%)
+        Missed introns:       2/199182	(  0.0%)
+         Novel introns:   68327/325578	( 21.0%)
+           Missed loci:       0/43977	(  0.0%)
+            Novel loci:   31945/69193	( 46.2%)
+
+ Total union super-loci across all input datasets: 69193 
+167680 out of 167680 consensus transcripts written in ./compared_IsoformSwitch.annotated.gtf (0 discarded as redundant)

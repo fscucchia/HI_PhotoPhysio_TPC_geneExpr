@@ -1,0 +1,30 @@
+# gffcompare v0.12.6 | Command line was:
+#gffcompare -r /work/pi_hputnam_uri_edu/snRNA_analysis/references/Pocillopora_acuta_HIv2_modified.gtf stringtie_merged_IsoformSwitch.gtf -o ./compared_IsoformSwitch
+#
+
+#= Summary for dataset: stringtie_merged_IsoformSwitch.gtf 
+#     Query mRNAs :  136779 in   44082 loci  (121349 multi-exon transcripts)
+#            (17040 multi-transcript loci, ~3.1 transcripts per locus)
+# Reference mRNAs :   33730 in   33611 loci  (25853 multi-exon)
+# Super-loci w/ reference transcripts:    28287
+#-----------------| Sensitivity | Precision  |
+        Base level:   100.0     |    44.1    |
+        Exon level:    94.0     |    50.3    |
+      Intron level:   100.0     |    62.0    |
+Intron chain level:   100.0     |    21.3    |
+  Transcript level:    98.4     |    24.3    |
+       Locus level:    98.5     |    63.6    |
+
+     Matching intron chains:   25853
+       Matching transcripts:   33199
+              Matching loci:   33100
+
+          Missed exons:       0/222629	(  0.0%)
+           Novel exons:  111992/426954	( 26.2%)
+        Missed introns:      22/188898	(  0.0%)
+         Novel introns:   61073/304835	( 20.0%)
+           Missed loci:       0/33611	(  0.0%)
+            Novel loci:   15795/44082	( 35.8%)
+
+ Total union super-loci across all input datasets: 44082 
+136779 out of 136779 consensus transcripts written in ./compared_IsoformSwitch.annotated.gtf (0 discarded as redundant)
