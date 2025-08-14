@@ -1,0 +1,11 @@
+"gene_ref","gene_id","gene_name","condition_1","condition_2","gene_switch_q_value","combinedDIF","switchConsequencesGene","Rank"
+"geneComp_00108299","Pocillopora_acuta_HIv2___RNAseq.g16551.t1",NA,"t30","t35",1.66303133671561e-07,2,TRUE,4
+"geneComp_00123924","Pocillopora_acuta_HIv2___TS.g11806.t1",NA,"t30","t35",1.9257128407915e-10,1.9911,TRUE,8
+"geneComp_00109744","Pocillopora_acuta_HIv2___RNAseq.g18484.t1",NA,"t30","t35",3.33262959262874e-11,1.97925,TRUE,10
+"geneComp_00106350","Pocillopora_acuta_HIv2___RNAseq.g13832.t1",NA,"t30","t35",1.08219276240219e-05,1.9631,TRUE,12
+"geneComp_00125563","Pocillopora_acuta_HIv2___TS.g20778.t3b",NA,"t30","t35",1.9727238644977e-07,1.95515,TRUE,14
+"geneComp_00089038","MSTRG.16744",NA,"t30","t35",1.30970969618365e-05,1.949275,TRUE,16
+"geneComp_00120506","Pocillopora_acuta_HIv2___RNAseq.g5633.t1",NA,"t30","t35",0.000117300734471536,1.931375,TRUE,18
+"geneComp_00115316","Pocillopora_acuta_HIv2___RNAseq.g26471.t1",NA,"t30","t35",6.14734751870895e-09,1.92995,TRUE,20
+"geneComp_00115340","Pocillopora_acuta_HIv2___RNAseq.g26503.t1",NA,"t30","t35",1.07412966509385e-05,1.911825,TRUE,25
+"geneComp_00127690","Pocillopora_acuta_HIv2___TS.g3265.t1",NA,"t30","t35",0.00014675622715549,1.902175,TRUE,27

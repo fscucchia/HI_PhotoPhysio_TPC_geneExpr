@@ -1,0 +1,11 @@
+gene_ref;gene_id;gene_name;condition_1;condition_2;gene_switch_q_value;combinedDIF;switchConsequencesGene;Rank
+geneComp_00040241;Pocillopora_acuta_HIv2___TS.g24264.t1;NA;control;t30;0.015185311;1.85815;TRUE;44
+geneComp_00010458;MSTRG.32252;NA;control;t30;0.004419657;1.81415;TRUE;69
+geneComp_00031270;Pocillopora_acuta_HIv2___RNAseq.g29298.t1;NA;control;t30;0.006907716;1.734166667;TRUE;109
+geneComp_00032193;Pocillopora_acuta_HIv2___RNAseq.g30622.t1;NA;control;t30;7.79E-06;1.708266667;TRUE;121
+geneComp_00031147;Pocillopora_acuta_HIv2___RNAseq.g29131.t1;NA;control;t30;1.68E-15;1.663125;TRUE;151
+geneComp_00027945;Pocillopora_acuta_HIv2___RNAseq.g24555.t1;NA;control;t30;0.008169774;1.605166667;TRUE;192
+geneComp_00022077;Pocillopora_acuta_HIv2___RNAseq.g16217.t1;NA;control;t30;1.77E-06;1.576225;TRUE;210
+geneComp_00018810;Pocillopora_acuta_HIv2___RNAseq.g11621.t1;NA;control;t30;0.000122817;1.528816667;TRUE;249
+geneComp_00024237;Pocillopora_acuta_HIv2___RNAseq.g19213.t1c;NA;control;t30;0.002075876;1.499025;TRUE;284
+geneComp_00001723;MSTRG.13656;NA;control;t30;0.031453548;1.4539;TRUE;337

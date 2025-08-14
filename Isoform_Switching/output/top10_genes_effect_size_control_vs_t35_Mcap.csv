@@ -1,0 +1,11 @@
+"gene_ref","gene_id","gene_name","condition_1","condition_2","gene_switch_q_value","combinedDIF","switchConsequencesGene","Rank"
+"geneComp_00082014","Montipora_capitata_HIv3___RNAseq.g29558.t1",NA,"control","t35",6.62593189920515e-09,1.97345,TRUE,3
+"geneComp_00135407","MSTRG.7198",NA,"control","t35",5.23120609055014e-06,1.9481,TRUE,6
+"geneComp_00127192","MSTRG.47801",NA,"control","t35",3.18859691550426e-11,1.943175,TRUE,7
+"geneComp_00119084","MSTRG.31496",NA,"control","t35",0.000207491708254834,1.9386,TRUE,9
+"geneComp_00090427","Montipora_capitata_HIv3___RNAseq.g41680.t1a",NA,"control","t35",3.29347002785382e-05,1.93133333333333,TRUE,10
+"geneComp_00100074","Montipora_capitata_HIv3___RNAseq.g9631.t1",NA,"control","t35",3.20517211591495e-06,1.9015,TRUE,14
+"geneComp_00089648","Montipora_capitata_HIv3___RNAseq.g40602.t1",NA,"control","t35",4.23377255229287e-11,1.841475,TRUE,15
+"geneComp_00094067","Montipora_capitata_HIv3___RNAseq.g46780.t1",NA,"control","t35",0.00134198789003387,1.80605,TRUE,16
+"geneComp_00101426","Montipora_capitata_HIv3___TS.g16262.t1",NA,"control","t35",0.000612337468292826,1.8027,TRUE,18
+"geneComp_00072781","Montipora_capitata_HIv3___RNAseq.g15858.t1",NA,"control","t35",3.24975497526517e-07,1.794325,TRUE,19

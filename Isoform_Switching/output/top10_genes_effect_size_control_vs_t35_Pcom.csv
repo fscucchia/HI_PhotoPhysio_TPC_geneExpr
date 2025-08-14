@@ -1,0 +1,11 @@
+"gene_ref","gene_id","gene_name","condition_1","condition_2","gene_switch_q_value","combinedDIF","switchConsequencesGene","Rank"
+"geneComp_00124121","Porites_compressa_HIv1___RNAseq.g9795.t1",NA,"control","t35",0.02249496482461,1.9731,TRUE,1
+"geneComp_00119724","Porites_compressa_HIv1___RNAseq.g41138.t1",NA,"control","t35",0.0316173607671891,1.94945,TRUE,2
+"geneComp_00105360","Porites_compressa_HIv1___RNAseq.g20666.t1",NA,"control","t35",0.00528022455898716,1.902325,TRUE,7
+"geneComp_00125520","Porites_compressa_HIv1___TS.g17436.t1",NA,"control","t35",0.02249496482461,1.7751,TRUE,13
+"geneComp_00098116","Porites_compressa_HIv1___RNAseq.g10624.t1",NA,"control","t35",0.038612678124922,1.7593,TRUE,14
+"geneComp_00118834","Porites_compressa_HIv1___RNAseq.g39942.t1",NA,"control","t35",0.02249496482461,1.6282,TRUE,32
+"geneComp_00120449","Porites_compressa_HIv1___RNAseq.g4552.t1",NA,"control","t35",0.0104227476845365,1.13320833333333,TRUE,107
+"geneComp_00110575","Porites_compressa_HIv1___RNAseq.g28070.t1",NA,"control","t35",0.0116401716690541,1.13084166666667,TRUE,108
+"geneComp_00112781","Porites_compressa_HIv1___RNAseq.g31134.t1",NA,"control","t35",0.0116401716690541,0.96645,TRUE,134
+"geneComp_00120158","Porites_compressa_HIv1___RNAseq.g4183.t1",NA,"control","t35",0.0143669118396597,0.92125,TRUE,150
