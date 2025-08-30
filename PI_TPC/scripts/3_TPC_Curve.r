@@ -6985,8 +6985,8 @@ params_to_use <- c("ctmax", "topt", "eh", "e", "r_tref", "breadth", "ctmin", "rm
 ############## repeat for just Am (photosynthesis)
 
 # Define which parameters are higher/lower is better
-higher_is_better <- c("eh", "ctmax", "topt", "r_tref", "breadth", "rmax")
-lower_is_better <- c("e", "ctmin")
+higher_is_better <- c( "ctmax", "topt", "r_tref", "breadth", "rmax")
+lower_is_better <- c("e", "eh", "ctmin")
 
 # Combine all relevant Am parameter tables
 ci_all_Am_combined <- bind_rows(
@@ -7010,11 +7010,11 @@ score_Am <- score_param_set(ci_all_Am_combined_unique, higher_is_better, lower_i
 # The composite_score column in score_Am is your Am-only thermal tolerance score for each species
 print(score_Am %>% select(source, Am_composite_score = composite_score))
 # # A tibble: 3 × 2
-# source Am_composite_score
-# <chr>               <dbl>
-#   1 Mcap                0.226
-# 2 Pacu               -0.391
-# 3 Pcom                0.165
+#   source Am_composite_score
+#   <chr>               <dbl>
+# 1 Mcap               0.0171
+# 2 Pacu              -0.459 
+# 3 Pcom               0.442 
 
 
 ######## include confidence intervals
