@@ -7138,7 +7138,6 @@ ggplot(score_main, aes(x = source, y = composite_score, color = source)) +
     panel.grid.minor = element_blank()
   )
 
-
 #### statistically compare the composite scores among the three species
 
 # Function to test overlap of confidence intervals
@@ -7204,8 +7203,8 @@ print(composite_comparison)
 ############## repeat for just Rd (respiration)
 
 # Define which parameters are higher/lower is better
-higher_is_better <- c("el")
-lower_is_better <- c("e", "ctmin")
+higher_is_better <- c()
+lower_is_better <- c("el", "e", "ctmin")
 
 # Combine all relevant Rd parameter tables
 ci_all_Rd_combined <- bind_rows(
