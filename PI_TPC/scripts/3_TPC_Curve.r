@@ -7570,3 +7570,166 @@ radarchart(radar_data_plot, axistype = 1,
            vlabels = colnames(radar_data_plot),
            title = "Rd Radar Plot (missing parameters set to zero)")
 legend("topright", legend = score_Rd_full$source, col = c("green", "cyan", "orange"), lty = 1, lwd = 2)
+
+
+##### PCA biplot Pmax metrics ###########
+
+library(tidyr)
+library(dplyr)
+library(tibble)
+
+tpc_pmax_wide <- bind_rows(
+  ci_extra_params_Am_residual_combined %>%
+    filter(param %in% c("rmax", "ctmin", "ctmax", "breadth")) %>%
+    select(species = source, param, estimate),
+  ci_residual_Am_combined %>%
+    select(species = source, param, estimate)
+) %>%
+  pivot_wider(names_from = param, values_from = estimate)
+
+# standardize by z-scoring
+tpc_pmax_scaled <- tpc_pmax_wide %>%
+  column_to_rownames("species") %>%
+  scale() %>%
+  as.data.frame()       
+       
+#Run PCA
+pca_res <- prcomp(tpc_pmax_scaled, center = TRUE, scale. = TRUE)
+       
+#Plot the Biplot    
+library(ggfortify)
+biplot(pca_res, cex = 1.2)
+
+#or
+library(factoextra)
+fviz_pca_biplot(
+  pca_res,
+  label = "var", # show variable names
+  habillage = rownames(tpc_pmax_scaled), # color by species
+  addEllipses = FALSE,
+  col.var = "black",
+  col.ind = c("green", "cyan", "orange"),
+  repel = TRUE,
+  title = "PCA Biplot of TPC Metrics (Pmax)"
+)
+
+
+# Bootstrap TPC metrics for each species - take into consideration ci
+set.seed(123)
+n_boot <- 1000
+
+# Combine both data frames
+ci_all <- bind_rows(
+  ci_extra_params_Am_residual_combined %>%
+    filter(param %in% c("rmax", "ctmin", "ctmax", "breadth")),
+  ci_residual_Am_combined
+)
+
+# Split by species
+boot_samples <- lapply(split(ci_all, ci_all$source), function(df) {
+  mat <- mapply(function(mean, lower, upper) {
+    rnorm(n_boot, mean, (upper - lower) / (2 * 1.96))
+  }, df$estimate, df$conf_lower, df$conf_upper)
+  # Set column names to parameter names
+  colnames(mat) <- df$param
+  as.data.frame(mat)
+})
+names(boot_samples) <- names(split(ci_all, ci_all$source))
+
+# boot_samples is a list: each element is a n_boot x n_param data.frame for a species
+# Add species column and combine
+boot_long <- purrr::imap_dfr(boot_samples, ~{
+  df <- as.data.frame(.x)
+  df$species <- .y
+  df
+})
+
+# Reorder columns so species is first
+boot_long <- boot_long %>% dplyr::select(species, everything())
+
+
+# Gather into long format for PCA
+boot_long <- as.data.frame(boot_long)
+
+# Remove species column, z-score, then add species back
+boot_scaled <- boot_long
+boot_scaled[,-1] <- scale(boot_long[,-1])
+
+# Run PCA on All Bootstrapped Samples
+pca_boot <- prcomp(boot_scaled[,-1], center = TRUE, scale. = TRUE)
+# Get PCA scores (PC1, PC2) for each bootstrap sample
+scores <- as.data.frame(pca_boot$x)
+scores$species <- boot_scaled$species
+
+####### Plot the PCA cloud with loadings
+library(ggplot2)
+
+# Get loadings for first two PCs
+loadings <- as.data.frame(pca_boot$rotation[,1:2])
+loadings$param <- rownames(loadings)
+
+# Plot
+ggplot(scores, aes(x = PC1, y = PC2, color = species)) +
+  geom_point(alpha = 0.1, size = 1) +  # clouds
+  stat_ellipse(aes(fill = species), geom = "polygon", alpha = 0.2, color = NA) +
+  geom_segment(data = loadings, aes(x = 0, y = 0, xend = PC1*3, yend = PC2*3), 
+               arrow = arrow(length = unit(0.2,"cm")), color = "black") +
+  geom_text(data = loadings, aes(x = PC1*3.2, y = PC2*3.2, label = param), 
+            color = "black", size = 4) +
+  scale_color_manual(values = c("Mcap"="green", "Pacu"="cyan", "Pcom"="orange")) +
+  scale_fill_manual(values = c("Mcap"="green", "Pacu"="cyan", "Pcom"="orange")) +
+  #theme_bw(base_size = 14) +
+  theme_minimal(base_size = 16) +
+  theme(
+    panel.grid = element_blank(),         # Remove grid
+    axis.line = element_line(colour = "black", linewidth = 1.2),
+    axis.ticks = element_line(colour = "black"),
+    panel.border = element_blank(),
+    legend.position = "top"
+  ) +
+  labs(title = "PCA Cloud Plot of Bootstrapped TPC Metrics (Pmax)",
+       x = "PC1", y = "PC2") +
+  theme(legend.position = "top")
+
+
+# # Prepare PCA scores and loadings
+# scores <- as.data.frame(pca_res$x)
+# scores$species <- rownames(scores)
+# loadings <- as.data.frame(pca_res$rotation[, 1:2])
+# loadings$metric <- rownames(loadings)
+
+# Use loadings from the bootstrapped PCA
+loadings_boot <- as.data.frame(pca_boot$rotation[, 1:2])
+loadings_boot$metric <- rownames(loadings_boot)
+
+arrow_scale <- 2.5
+
+ggplot(scores, aes(x = PC1, y = PC2, color = species)) +
+  geom_point(size = 5) +
+  # Arrows for loadings from bootstrapped PCA
+  geom_segment(
+    data = loadings_boot,
+    aes(x = 0, y = 0, xend = PC1 * arrow_scale, yend = PC2 * arrow_scale),
+    arrow = arrow(length = unit(0.25, "cm")), color = "black"
+  ) +
+  # Labels for loadings
+  geom_text(
+    data = loadings_boot,
+    aes(x = PC1 * arrow_scale * 1.1, y = PC2 * arrow_scale * 1.1, label = metric),
+    color = "black", size = 5, fontface = "bold"
+  ) +
+  scale_color_manual(values = c("Mcap" = "green", "Pacu" = "cyan", "Pcom" = "orange")) +
+  theme_minimal(base_size = 16) +
+  theme(
+    panel.grid = element_blank(),
+    axis.line = element_line(colour = "black", linewidth = 1.2),
+    axis.ticks = element_line(colour = "black"),
+    panel.border = element_blank(),
+    legend.position = "top"
+  ) +
+  labs(
+    x = "PC1",
+    y = "PC2",
+    title = "PCA Biplot of TPC Metrics (Pmax) - Bootstrapped Loadings"
+  )
+       
