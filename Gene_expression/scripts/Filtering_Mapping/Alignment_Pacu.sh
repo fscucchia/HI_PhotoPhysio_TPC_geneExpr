@@ -18,7 +18,7 @@ module load STAR/2.7.11b-GCC-12.3.0
 
 # genome='/work/pi_hputnam_uri_edu/HI_Genomes/PacutaV2/Pocillopora_acuta_HIv2.assembly.fasta'
 # star_genome_dir='/scratch/workspace/federica_scucchia_uri_edu-hawaii/20250424_ENCORE_HawaiiTPC_Federica/output/GenomeIndex_Pacu'
-# gtf='/work/pi_hputnam_uri_edu/snRNA_analysis/references/Pocillopora_acuta_HIv2_modified.gtf'
+# gtf='/work/pi_hputnam_uri_edu/snRNA_analysis/references/Pocillopora_acuta_HIv2.gtf'
 # genomeSAindexNbases=13
 # limitSjdbInsertNsj=1200000 # default 1000000
 
