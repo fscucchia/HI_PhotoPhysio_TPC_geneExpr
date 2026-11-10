@@ -5,4 +5,3 @@ This electronic notebook provides the scripts and data for the physiology, therm
 
 Published in [STOTEN](https://www.sciencedirect.com/science/article/pii/S0048969726010272#ab0015).
 
-10.1016/j.scitotenv.2026.182359
